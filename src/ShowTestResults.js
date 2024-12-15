@@ -1,12 +1,6 @@
 import React from 'react';
 
-const ShowTestResults = ({ style, handleSubmit }) => {
-  const testResults = [
-    { id: 1, name: "Test Case 1", status: "passed", message: "Successfully completed" },
-    { id: 2, name: "Test Case 2", status: "failed", message: "Expected 5 but got 3" },
-    { id: 3, name: "Test Case 3", status: "passed", message: "Successfully completed" },
-  ];
-
+const ShowTestResults = ({ testResults, style, handleSubmit }) => {
   return (
     <div style={{
       ...style,

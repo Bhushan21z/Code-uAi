@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { OpenAI } from 'openai';
 import { 
   SandpackProvider, 
   SandpackLayout, 
@@ -16,6 +15,7 @@ import PROBLEMS_DATA from './ProblemsData';
 import ProblemsComponent from './Problem';
 import ListProblems from './ListProblems';
 import GenerateResult from './GenerateResult';
+import { Circles } from 'react-loader-spinner';
 
 export default function App() {
   const [template, setTemplate] = useState('static');
@@ -26,6 +26,7 @@ export default function App() {
   const [showProblems, setShowProblems] = useState(false);
   const [currentProblem, setCurrentProblem] = useState(null);
   const [testResults, setTestResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const storedProblemsData = localStorage.getItem('problemData');
@@ -36,10 +37,14 @@ export default function App() {
   }, []);
 
   const handleSubmit = async () => {
+    setIsLoading(true);
+    if (!isSubmit) {
+      const challengeData = JSON.parse(localStorage.getItem('problemData'));
+      const resultData = await GenerateResult(challengeData, TEMPLATES[template].files);
+      setTestResults(resultData);
+    }
     setIsSubmit(!isSubmit);
-    // const challengeData = JSON.parse(localStorage.getItem('problemData'));
-    // const resultData = await GenerateResult(challengeData, TEMPLATES[template].files);
-    // setTestResults(resultData);
+    setIsLoading(false);
   };
 
   const handleTemplateChange = (e) => {
@@ -186,30 +191,44 @@ export default function App() {
                       padding: '0 10px'
                     }}
                   >
-                    { !isSubmit ? (
-                      <button
-                        onClick={handleSubmit}
-                        style={{
-                          padding: '10px 15px',
-                          margin: '10px',
-                          backgroundColor: '#4CAF50',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Submit
-                      </button>
+                    {isLoading ? (
+                      <div style={{ padding: '10px 15px', margin: '10px' }}>
+                        <Circles
+                          height="50"
+                          width="50"
+                          color="#4CAF50"
+                          ariaLabel="circles-loading"
+                          wrapperStyle={{}}
+                          wrapperClass=""
+                          visible={true}
+                        />
+                      </div>
                     ) : (
-                      <ShowTestResults
-                        testResults={testResults}
-                        handleSubmit={handleSubmit}
-                        style={{
-                          height: '100%',
-                          width: '100%'
-                        }}
-                      />
+                      !isSubmit ? (
+                        <button
+                          onClick={handleSubmit}
+                          style={{
+                            padding: '10px 15px',
+                            margin: '10px',
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Submit
+                        </button>
+                      ) : (
+                        <ShowTestResults
+                          testResults={testResults}
+                          handleSubmit={handleSubmit}
+                          style={{
+                            height: '100%',
+                            width: '100%'
+                          }}
+                        />
+                      )
                     )}
                   </div>
                 </div>
