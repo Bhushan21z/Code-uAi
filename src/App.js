@@ -11,18 +11,20 @@ import { amethyst } from "@codesandbox/sandpack-themes";
 import ShowTestResults from './ShowTestResults';
 import TEMPLATES from './Template';
 import FileManagement from './FileManagement';
-import PROBLEMS_DATA from './ProblemsData';
+import PROBLEMS_DATA from './ReactProblemsData';
+import AIChat from './AIChat';
 import ProblemsComponent from './Problem';
 import ListProblems from './ListProblems';
 import GenerateResult from './GenerateResult';
 import { Circles } from 'react-loader-spinner';
 
 export default function App() {
-  const [template, setTemplate] = useState('static');
+  const [template, setTemplate] = useState('react');
   const [key, setKey] = useState(Date.now());
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [isSubmit, setIsSubmit] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [showProblems, setShowProblems] = useState(false);
   const [currentProblem, setCurrentProblem] = useState(null);
   const [testResults, setTestResults] = useState([]);
@@ -132,7 +134,7 @@ export default function App() {
                       borderRadius: '4px'
                     }}
                   >
-                    <option value="static">Static (HTML/CSS/JS)</option>
+                    {/* <option value="static">Static (HTML/CSS/JS)</option> */}
                     <option value="react">React</option>
                   </select>
                   
@@ -244,20 +246,36 @@ export default function App() {
                 padding: '0 10px',
               }}
             >
-              <button
-                onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-                style={{
-                  padding: '5px 15px',
-                  margin: '10px',
-                  backgroundColor: '#6851ff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                {isConsoleOpen ? 'Hide Console' : 'Show Console'}
-              </button>
+              <div>
+                <button
+                  onClick={() => setIsConsoleOpen(!isConsoleOpen)}
+                  style={{
+                    padding: '5px 15px',
+                    margin: '10px',
+                    backgroundColor: '#6851ff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isConsoleOpen ? 'Hide Console' : 'Show Console'}
+                </button>
+                <button
+                  onClick={() => setIsChatOpen(!isChatOpen)}
+                  style={{
+                    padding: '5px 15px',
+                    margin: '10px',
+                    backgroundColor: '#6851ff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isChatOpen ? 'Close Chat' : 'Chat with AI'}
+                </button>
+              </div>
               <button
                 onClick={() => setIsFullScreen(!isFullScreen)}
                 style={{
@@ -274,14 +292,23 @@ export default function App() {
               </button>
             </div>
 
-            <SandpackPreview
-              style={{ 
-                height: isConsoleOpen ? '55%' : '94%',
-                flex: 1
-              }}
-              showOpenInCodeSandbox={false}
-            />
-            {isConsoleOpen && (
+            {isChatOpen ? (
+              <AIChat
+                style={{ 
+                  height: isConsoleOpen ? '55%' : '94%',
+                  flex: 1
+                }}
+              />
+            ) : (
+                <SandpackPreview
+                  style={{ 
+                    height: isConsoleOpen ? '55%' : '94%',
+                    flex: 1
+                  }}
+                  showOpenInCodeSandbox={false}
+                />
+            )}
+            {isConsoleOpen && !isChatOpen && (
               <SandpackConsole style={{ height: '40%' }} />
             )}
           </div>

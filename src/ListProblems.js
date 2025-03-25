@@ -1,5 +1,5 @@
 import React from "react";
-import PROBLEM_DATA from './ProblemsData';
+import PROBLEM_DATA from './ReactProblemsData';
 
 const ListProblems = ({ handleShowProblems, onFinishChallenge }) => {
   const challengeKeys = Object.keys(PROBLEM_DATA);

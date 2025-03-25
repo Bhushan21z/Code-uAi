@@ -1,7 +1,8 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const GenerateResult = async (challengeData, submittedCode) => {
-  const genAI = new GoogleGenerativeAI("AIzaSyCcGcbimlKBzIUGRXqW0HyowkoR-44EplQ");
+  const genAiKey = process.env.REACT_APP_GEMINI_API_KEY;
+  const genAI = new GoogleGenerativeAI(genAiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const systemPrompt = `
@@ -47,7 +48,7 @@ const GenerateResult = async (challengeData, submittedCode) => {
   let rawText = result.response.text().trim();
 
   if (rawText.startsWith("```json") && rawText.endsWith("```")) {
-    rawText = rawText.slice(7, -3).trim(); // Remove "```json" and "```"
+    rawText = rawText.slice(7, -3).trim();
   }
   const parsedObject = JSON.parse(rawText);
 

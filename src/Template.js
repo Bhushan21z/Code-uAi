@@ -79,17 +79,52 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Static template loaded and ready!');
 });`;
 
-const dummyReact = `import React from 'react';
-  
-  function App() {
-    return (
+const dummyReact = `import React, { useState } from 'react';
+import { Login } from './Login';
+import { Register } from './Register';
+
+function App() {
+  const [showLogin, setShowLogin] = useState(true);
+
+  return (
+    <div style={{ textAlign: 'center', marginTop: '20px' }}>
       <div>
-        <h1>Hello, React World!</h1>
+        <button onClick={() => setShowLogin(true)} style={{ marginRight: '10px' }}>
+          Login
+        </button>
+        <button onClick={() => setShowLogin(false)}>
+          Register
+        </button>
       </div>
-    );
-  }
-  
-  export default App;`;
+      {showLogin ? <Login /> : <Register />}
+    </div>
+  );
+}
+
+export default App;`;
+
+const dummyLogin = `export function Login() {
+  return (
+    <div style={{ marginTop: '20px' }}>
+      <h2>Login</h2>
+      <input type="text" placeholder="Username" style={{ display: 'block', margin: '10px auto' }} />
+      <input type="password" placeholder="Password" style={{ display: 'block', margin: '10px auto' }} />
+      <button>Login</button>
+    </div>
+  );
+}`
+
+const dummyRegister = `export function Register() {
+  return (
+    <div style={{ marginTop: '20px' }}>
+      <h2>Register</h2>
+      <input type="text" placeholder="Username" style={{ display: 'block', margin: '10px auto' }} />
+      <input type="email" placeholder="Email" style={{ display: 'block', margin: '10px auto' }} />
+      <input type="password" placeholder="Password" style={{ display: 'block', margin: '10px auto' }} />
+      <button>Register</button>
+    </div>
+  );
+}`;
 
 const TEMPLATES = {
   static: {
@@ -111,6 +146,12 @@ const TEMPLATES = {
       "/App.js": {
         code: dummyReact,
         active: true
+      },
+      "/Register.js": {
+        code: dummyRegister,
+      },
+      "/Login.js": {
+        code: dummyLogin,
       }
     }
   }

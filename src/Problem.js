@@ -11,6 +11,7 @@ const ProblemsComponent = ({ problem }) => {
       height: '100vh',
       color: 'white',
       overflowY: 'auto',
+      fontSize: '16px',
     }}>
       <h2>{problem.title}</h2>
       
