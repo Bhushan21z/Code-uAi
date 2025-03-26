@@ -1,7 +1,8 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const GenerateResult = async (challengeData, submittedCode) => {
-  const genAiKey = process.env.REACT_APP_GEMINI_API_KEY;
+  // const genAiKey = process.env.REACT_APP_GEMINI_API_KEY;
+  const genAiKey = "AIzaSyCR8d9YQd3yb0sJ4bhwcUpDLYMAw03sgm8";
   const genAI = new GoogleGenerativeAI(genAiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
