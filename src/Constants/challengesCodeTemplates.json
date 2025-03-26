@@ -1,0 +1,47 @@
+{
+    "static-landing-page": {
+      "files": {
+        "/index.html": {
+          "code": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Static Template</title>\n    <link rel=\"stylesheet\" href=\"styles.css\">\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Hello, Static World!</h1>\n        <p class=\"description\">This is a sample static template</p>\n        <button id=\"clickMe\">Click Me!</button>\n    </div>\n    <script src=\"script.js\"></script>\n</body>\n</html>",
+          "active": true
+        },
+        "/styles.css": {
+          "code": "body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; }\n.container { max-width: 800px; margin: 0 auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }"
+        },
+        "/script.js": {
+          "code": "document.addEventListener('DOMContentLoaded', function() {\n    document.getElementById('clickMe').addEventListener('click', function() {\n        alert('Button Clicked!');\n    });\n});"
+        }
+      }
+    },
+    "login-page": {
+      "files": {
+        "/App.js": {
+          "code": "import React, { useState } from 'react';\nimport { Login } from './Login';\nimport { Register } from './Register';\nfunction App() {\n  const [showLogin, setShowLogin] = useState(true);\n  return (\n    <div style={{ textAlign: 'center', marginTop: '20px' }}>\n      <button onClick={() => setShowLogin(true)}>Login</button>\n      <button onClick={() => setShowLogin(false)}>Register</button>\n      {showLogin ? <Login /> : <Register />}\n    </div>\n  );\n}\nexport default App;",
+          "active": true
+        },
+        "/Login.js": {
+          "code": "export function Login() {\n  return (\n    <div>\n      <h2>Login</h2>\n      <input type=\"text\" placeholder=\"Username\" />\n      <input type=\"password\" placeholder=\"Password\" />\n      <button>Login</button>\n    </div>\n  );\n}"
+        },
+        "/Register.js": {
+          "code": "export function Register() {\n  return (\n    <div>\n      <h2>Register</h2>\n      <input type=\"text\" placeholder=\"Username\" />\n      <input type=\"email\" placeholder=\"Email\" />\n      <input type=\"password\" placeholder=\"Password\" />\n      <button>Register</button>\n    </div>\n  );\n}"
+        }
+      }
+    },
+    "todo-app": {
+      "files": {
+        "/App.js": {
+          "code": "import React, { useState } from 'react';\nfunction App() {\n  const [tasks, setTasks] = useState([]);\n  const [task, setTask] = useState('');\n  const addTask = () => {\n    if (task.trim() !== '') {\n      setTasks([...tasks, task]);\n      setTask('');\n    }\n  };\n  return (\n    <div>\n      <h1>Todo App</h1>\n      <input type=\"text\" placeholder=\"Enter a task\" value={task} onChange={(e) => setTask(e.target.value)} />\n      <button onClick={addTask}>Add Task</button>\n      <ul>{tasks.map((t, index) => (<li key={index}>{t}</li>))}</ul>\n    </div>\n  );\n}\nexport default App;",
+          "active": true
+        }
+      }
+    },
+    "weather-app": {
+      "files": {
+        "/App.js": {
+          "code": "import React, { useState } from 'react';\nfunction WeatherApp() {\n  const [city, setCity] = useState('');\n  const [weather, setWeather] = useState(null);\n\n  const fetchWeather = async () => {\n    if (city.trim() !== '') {\n      // Placeholder API call, update with a real API\n      setWeather({ temp: '25°C', condition: 'Sunny' });\n    }\n  };\n\n  return (\n    <div style={{ textAlign: 'center', marginTop: '20px' }}>\n      <h1>Weather App</h1>\n      <input type=\"text\" placeholder=\"Enter city\" value={city} onChange={(e) => setCity(e.target.value)} />\n      <button onClick={fetchWeather}>Get Weather</button>\n      {weather && (\n        <div>\n          <h2>Weather in {city}</h2>\n          <p>Temperature: {weather.temp}</p>\n          <p>Condition: {weather.condition}</p>\n        </div>\n      )}\n    </div>\n  );\n}\nexport default WeatherApp;",
+          "active": true
+        }
+      }
+    }
+  }
+  

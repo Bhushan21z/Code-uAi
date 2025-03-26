@@ -1,0 +1,123 @@
+{
+    "login-page": {
+      "title": "Login Page",
+      "description": "Create a modern, responsive login and registration interface with client-side validation and interactive features. Also modify UI as shown in the preview.",
+      "uiRequirements": [
+        "Responsive design for mobile and desktop",
+        "Smooth form transitions",
+        "Error message animations",
+        "Password strength indicator",
+        "Show/hide password toggle"
+      ],
+      "difficulty": "Beginner",
+      "functionalRequirements": [
+        "Client-side email format validation",
+        "Email must be a valid format",
+        "Email cannot be empty",
+        "Maximum 100 characters for email",
+        "Password minimum 8 characters",
+        "Password must contain at least one uppercase letter",
+        "Password must contain at least one number",
+        "Password must contain at least one special character",
+        "Real-time password match validation",
+        "Disabled submit button until all validations pass"
+      ],
+      "learningGoals": [
+        "Implement form validation",
+        "Create responsive design",
+        "Handle user interaction states"
+      ],
+      "preview": "https://i.ibb.co/MDvnLvL/Screenshot-from-2024-12-15-20-55-26.png",
+      "testCases": [
+        {
+          "scenario": "Valid login credentials",
+          "expectedBehavior": "Successfully log in and redirect to dashboard"
+        },
+        {
+          "scenario": "Invalid email format",
+          "expectedBehavior": "Show specific email format error"
+        },
+        {
+          "scenario": "Weak password",
+          "expectedBehavior": "Display password strength warning"
+        }
+      ],
+      "recommendedTechnologies": ["React"]
+    },
+    "todo-app": {
+      "title": "Todo Application",
+      "description": "Build a responsive todo app with CRUD operations. Users should be able to add, edit, delete, and mark tasks as completed.",
+      "uiRequirements": [
+        "Minimalistic UI",
+        "Drag and drop functionality",
+        "Dark mode support"
+      ],
+      "difficulty": "Intermediate",
+      "functionalRequirements": [
+        "Add new tasks",
+        "Edit existing tasks",
+        "Delete tasks",
+        "Mark tasks as completed",
+        "Persist tasks in local storage"
+      ],
+      "learningGoals": [
+        "Manage application state with hooks",
+        "Implement CRUD operations",
+        "Work with local storage"
+      ],
+      "preview": "https://i.ibb.co/MDvnLvL/Screenshot-from-2024-12-15-20-55-26.png",
+      "testCases": [
+        {
+          "scenario": "Adding a new task",
+          "expectedBehavior": "Task appears in the list"
+        },
+        {
+          "scenario": "Marking a task as completed",
+          "expectedBehavior": "Task moves to the completed section"
+        },
+        {
+          "scenario": "Deleting a task",
+          "expectedBehavior": "Task is removed from the list"
+        }
+      ],
+      "recommendedTechnologies": ["React", "Vue", "Angular"]
+    },
+    "weather-app": {
+      "title": "Weather App",
+      "description": "Create a real-time weather application that fetches weather data from an API and displays the current conditions based on user input.",
+      "uiRequirements": [
+        "Attractive weather-themed UI",
+        "Loading animations",
+        "Dark/light mode toggle"
+      ],
+      "difficulty": "Hard",
+      "functionalRequirements": [
+        "Fetch weather data using an API",
+        "Display temperature, humidity, and wind speed",
+        "Allow users to search by city",
+        "Show an error message for invalid locations"
+      ],
+      "learningGoals": [
+        "Consume REST APIs in React",
+        "Handle asynchronous data fetching",
+        "Implement error handling"
+      ],
+      "preview": "https://i.ibb.co/MDvnLvL/Screenshot-from-2024-12-15-20-55-26.png",
+      "testCases": [
+        {
+          "scenario": "Searching for a valid city",
+          "expectedBehavior": "Displays weather information"
+        },
+        {
+          "scenario": "Entering an invalid city",
+          "expectedBehavior": "Shows an error message"
+        },
+        {
+          "scenario": "Refreshing the page",
+          "expectedBehavior": "Last searched city remains in the input"
+        }
+      ],
+      "recommendedTechnologies": ["React", "Vue"]
+    }
+  }
+  
