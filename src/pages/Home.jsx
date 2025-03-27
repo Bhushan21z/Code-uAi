@@ -11,12 +11,10 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const onSuccess = (credentialResponse) => {
-    console.log("Google Credential Response:", credentialResponse);
     const idToken = credentialResponse.credential;
 
     if (idToken) {
       const decodedToken = JSON.parse(atob(idToken.split('.')[1]));
-      console.log("Decoded User Info (Client-Side):", decodedToken);
       setIsLoggedIn(true);
     } else {
       console.error("ID token not found in credential response.");

@@ -6,7 +6,6 @@ import challengesData from "../Constants/challenges.json";
 
 export default function ChallengesList() {
   const navigate = useNavigate();
-  console.log(challengesData);
 
   return (
     <Box

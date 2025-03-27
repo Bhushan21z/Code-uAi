@@ -7,7 +7,7 @@ const GenerateResult = async (challengeData, submittedCode) => {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const systemPrompt = `
-  You are a highly skilled code evaluator, and your task is to analyze the following coding challenge and determine if all the test cases pass.
+  You are a highly skilled code evaluator, and your task is to analyze the following frontend coding challenge and determine if all the test cases pass.
   The challenge consists of the problem description, the UI and functional requirements, and the submitted code.
   Evaluate the test cases by running the code logic and providing an analysis for each test case.
 

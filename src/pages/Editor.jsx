@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { 
   SandpackProvider, 
   SandpackLayout, 
@@ -7,42 +8,83 @@ import {
   SandpackPreview,
   SandpackFileExplorer,
   SandpackConsole,
+  useSandpack
 } from "@codesandbox/sandpack-react";
 import { amethyst } from "@codesandbox/sandpack-themes";
 import ShowTestResults from "../components/ShowTestResults";
-import CODE_TEMPLATES from '../Constants/Template';
+import CODE_TEMPLATES from '../Constants/challengesCodeTemplates.json';
 import FileManagement from '../components/FileManagement';
 import PROBLEMS_DATA from "../Constants/challenges.json";
 import AIChat from '../components/AIChat';
 import ProblemsComponent from '../components/Problem';
 import GenerateResult from '../components/GenerateResult';
+import GenerateSummary from '../components/GenerateSummary';
 import { Circles } from 'react-loader-spinner';
+import { usePageLoader } from "../contexts/PageLoaderContext";
 
 export default function Editor() {
   const { key } = useParams();
+  const navigate = useNavigate();
   const [template, setTemplate] = useState('react');
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [isSubmit, setIsSubmit] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showProblem, setShowProblem] = useState(false);
+  const [userCode, setUserCode] = useState({});
   const [currentProblem, setCurrentProblem] = useState(null);
   const [testResults, setTestResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { setLoading } = usePageLoader();
+
+  const AutoSaveComponent = () => {
+    const { sandpack } = useSandpack();
+
+    useEffect(() => {
+      const autoSaveInterval = setInterval(() => {
+        const excludedFiles = [
+          '/index.js', 
+          '/package.json', 
+          '/public/index.html'
+        ];
+
+        const filteredFiles = Object.fromEntries(
+          Object.entries(sandpack.files).filter(
+            ([filename]) => !excludedFiles.includes(filename)
+          )
+        );
+
+        if (Object.keys(filteredFiles).length > 0) {
+          setUserCode(filteredFiles);
+          localStorage.setItem(`userCode-${key}`, JSON.stringify(filteredFiles));
+        }
+      }, 5000);
+
+      return () => clearInterval(autoSaveInterval);
+    }, [sandpack.files]);
+
+    return null;
+  };
 
   useEffect(() => {
-    const storedProblemsData = localStorage.getItem(`problemData-${key}`);
-    if (!storedProblemsData) {
-      const firstProblemKey = PROBLEMS_DATA[key];
-      localStorage.setItem(`problemData-${key}`, JSON.stringify(PROBLEMS_DATA[firstProblemKey]));
+    setCurrentProblem(PROBLEMS_DATA[key]);
+    localStorage.setItem(`problemData-${key}`, JSON.stringify(PROBLEMS_DATA[key]));
+  }, [key]);
+
+  useEffect(() => {
+    const storedCode = JSON.parse(localStorage.getItem(`userCode-${key}`));
+    if (storedCode) {
+      setUserCode(storedCode);
+    } else {
+      setUserCode(CODE_TEMPLATES[key]?.files || {});
     }
   }, [key]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
     if (!isSubmit) {
-      const challengeData = JSON.parse(localStorage.getItem('problemData'));
-      const resultData = await GenerateResult(challengeData, CODE_TEMPLATES[template].files);
+      const challengeData = JSON.parse(localStorage.getItem(`problemData-${key}`));
+      const resultData = await GenerateResult(challengeData, userCode);
       setTestResults(resultData);
     }
     setIsSubmit(!isSubmit);
@@ -59,8 +101,24 @@ export default function Editor() {
     setCurrentProblem(newProblemData);
   };
 
-  const handleFinishChallenge = () => {
-    alert('Challenge completed!');
+  const handleFinishChallenge = async () => {
+    setLoading(true);
+    const summaryResult = await GenerateSummary(
+      currentProblem, 
+      userCode, 
+      PROBLEMS_DATA[key], 
+      JSON.parse(localStorage.getItem(`chatHistory${key}`)) || []
+    );
+    const resultData = await GenerateResult(currentProblem, userCode);
+    
+    if(summaryResult && resultData){
+      localStorage.setItem(`testSummary${key}`, JSON.stringify(summaryResult));
+      localStorage.setItem(`testcaseData${key}`, JSON.stringify(resultData));
+      navigate(`/summary/${key}`); 
+    } else {
+      alert('Error Generating your result Summary. Please Try Again.')
+    }
+    setLoading(false);
   };
 
   return (
@@ -68,7 +126,7 @@ export default function Editor() {
       key={key}
       theme={amethyst}
       template={template}
-      files={CODE_TEMPLATES[template].files}
+      files={userCode}
     >
       <div style={{ 
         display: 'flex', 
@@ -194,6 +252,7 @@ export default function Editor() {
                   maxHeight: isSubmit ? '60vh' : '89vh',
                   paddingBottom: '10px'
                 }}>
+                  <AutoSaveComponent />
                   <SandpackCodeEditor
                     style={{ minHeight: '89vh' }}
                     showTabs
@@ -315,6 +374,7 @@ export default function Editor() {
                   height: isConsoleOpen ? '55%' : '94%',
                   flex: 1
                 }}
+                chatKey={key}
               />
             ) : (
                 <SandpackPreview

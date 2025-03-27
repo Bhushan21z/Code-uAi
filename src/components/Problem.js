@@ -12,6 +12,7 @@ const ProblemsComponent = ({ problem }) => {
       color: 'white',
       overflowY: 'auto',
       fontSize: '16px',
+      maxHeight: '90vh',
     }}>
       <h2>{problem.title}</h2>
       
