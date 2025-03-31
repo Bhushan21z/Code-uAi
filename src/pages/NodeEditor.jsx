@@ -13,7 +13,7 @@ import { SandpackFileExplorer } from 'sandpack-file-explorer';
 import { amethyst } from "@codesandbox/sandpack-themes";
 import ShowTestResults from "../components/ShowTestResults";
 import CODE_TEMPLATES from '../Constants/challengesCodeTemplates.json';
-import PROBLEMS_DATA from "../Constants/challenges.json";
+import PROBLEMS_DATA from "../Constants/backendChallenges.json";
 import AIChat from '../components/AIChat';
 import ProblemsComponent from '../components/Problem';
 import GenerateResult from '../components/GenerateResult';
@@ -22,6 +22,7 @@ import { Circles } from 'react-loader-spinner';
 import { usePageLoader } from "../contexts/PageLoaderContext";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import RequestTester from '../components/RequestTester';
+import axios from "axios";
 
 export default function NodeEditor() {
   const { key } = useParams();
@@ -39,17 +40,30 @@ export default function NodeEditor() {
   const [isRequestTesterOpen, setIsRequestTesterOpen] = useState(false);
   const { setLoading } = usePageLoader();
 
+  const serverUrl = 'http://localhost:5000';
+
+  const fetchUserCodeforServer = () => {
+    const storedCode = localStorage.getItem(`userCode-${key}`);
+    const files = storedCode ? JSON.parse(storedCode) : CODE_TEMPLATES[key]?.files;
+  
+    if (!files) return null;
+  
+    return {
+      project: Object.fromEntries(
+        Object.entries(files).map(([filePath, { code }]) => [
+          filePath.replace("/", ""), // Remove leading slash
+          filePath.endsWith(".json") ? JSON.parse(code) : code,
+        ])
+      ),
+    };
+  }
+
   const AutoSaveComponent = () => {
     const { sandpack } = useSandpack();
 
     useEffect(() => {
       const autoSaveInterval = setInterval(() => {
-        const excludedFiles = [
-          '/index.js', 
-          '/package.json', 
-          '/public/index.html'
-        ];
-
+        const excludedFiles = [];
         const filteredFiles = Object.fromEntries(
           Object.entries(sandpack.files).filter(
             ([filename]) => !excludedFiles.includes(filename)
@@ -67,6 +81,29 @@ export default function NodeEditor() {
 
     return null;
   };
+
+  useEffect(() => {
+    const setupContainer = async () => {
+      setLoading(true);
+      try {
+        const projectFiles = fetchUserCodeforServer();
+        const response = await axios.post(`${serverUrl}/run`, projectFiles);
+
+        if (response.data && response.data.containerId) {
+          localStorage.setItem(`containerId-${key}`, response.data.containerId);
+          setLoading(false);
+        } else {
+          throw new Error("Invalid response from server");
+        }
+      } catch (error) {
+        console.error("Error setting up container:", error);
+        alert("Please try again after some time.");
+      }
+      setLoading(false);
+    };
+
+    setupContainer();
+  }, [key]);
 
   useEffect(() => {
     setCurrentProblem(PROBLEMS_DATA[key]);
@@ -395,6 +432,7 @@ export default function NodeEditor() {
                 height: isConsoleOpen ? '55%' : '94%',
                 flex: 1
                 }}
+                problemKey={key}
             />
             ) : isChatOpen ? (
             <AIChat

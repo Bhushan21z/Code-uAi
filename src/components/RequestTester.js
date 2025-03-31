@@ -1,21 +1,51 @@
 import React, { useState } from 'react';
+import CODE_TEMPLATES from '../Constants/challengesCodeTemplates.json';
+import axios from 'axios';
 
-function RequestTester() {
-  const [url, setUrl] = useState('/api/your-endpoint');
+function RequestTester({problemKey}) {
+  const [url, setUrl] = useState('/your-endpoint');
   const [method, setMethod] = useState('POST');
   const [headers, setHeaders] = useState('{\n  "Content-Type": "application/json"\n}');
   const [body, setBody] = useState('{\n  "key": "value"\n}');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const serverUrl = 'http://localhost:5000';
+
+  const fetchUserCodeforServer = () => {
+    const storedCode = localStorage.getItem(`userCode-${problemKey}`);
+    const files = storedCode ? JSON.parse(storedCode) : CODE_TEMPLATES[problemKey]?.files;
+  
+    if (!files) return null;
+  
+    return {
+      project: Object.fromEntries(
+        Object.entries(files).map(([filePath, { code }]) => [
+          filePath.replace("/", ""), // Remove leading slash
+          filePath.endsWith(".json") ? JSON.parse(code) : code,
+        ])
+      ),
+    };
+  }
+
+  const frameRequestBody = () => {
+    const projectFiles = fetchUserCodeforServer()?.project;
+    if (!projectFiles) return null;
+    const objectToReturn = {
+      containerId: localStorage.getItem(`containerId-${problemKey}`),
+      method,
+      route: url,
+      project_files: projectFiles,
+    }
+
+    return objectToReturn;
+  }
+
   const handleSendRequest = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`https://zl127kn-4000.nodebox.codesandbox.io/homeee`, {
-        method,
-        headers: JSON.parse(headers),
-        body: method !== 'GET' ? body : undefined
-      });
+      const reqBody = frameRequestBody();
+      const res = await axios.post(`${serverUrl}/execute`, reqBody);
       
       const contentType = res.headers.get('content-type');
       let data;
