@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ProblemsComponent = ({ problem }) => {
+const ProblemsComponent = ({ problem, problemKey }) => {
 
   return (
     <div style={{
@@ -21,34 +21,38 @@ const ProblemsComponent = ({ problem }) => {
         <p>{problem.description}</p>
       </div>
 
-      {problem.preview && (
-        <div style={{ 
-          width: '100%', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          marginBottom: '15px' 
-        }}>
-          <img 
-            src={problem.preview}
-            alt={`${problem.title} Preview`} 
-            style={{ 
-              maxWidth: '100%', 
-              maxHeight: '300px', 
-              borderRadius: '8px',
-              objectFit: 'cover'
-            }} 
-          />
-        </div>
-      )}
+      {problemKey !== 'express-api' && (
+        <div>
+        {problem.preview && (
+          <div style={{ 
+            width: '100%', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            marginBottom: '15px' 
+          }}>
+            <img 
+              src={problem.preview}
+              alt={`${problem.title} Preview`} 
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '300px', 
+                borderRadius: '8px',
+                objectFit: 'cover'
+              }} 
+            />
+          </div>
+        )}
 
-      <div style={{ marginTop: '15px' }}>
-        <h3>UI Requirements</h3>
-        <ul>
-          {problem.uiRequirements.map((requirement, index) => (
-            <li key={index}>{requirement}</li>
-          ))}
-        </ul>
+        <div style={{ marginTop: '15px' }}>
+          <h3>UI Requirements</h3>
+          <ul>
+            {problem.uiRequirements.map((requirement, index) => (
+              <li key={index}>{requirement}</li>
+            ))}
+          </ul>
+        </div>
       </div>
+      )}
 
       <div style={{ marginTop: '15px' }}>
         <h3>Functional Requirements</h3>

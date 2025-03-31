@@ -2,6 +2,7 @@
     "express-api": {
     "title": "Express API - Build Basic Routes",
     "description": "Create a simple Express API with basic GET and POST routes. The API should respond with appropriate JSON data based on requests.",
+    "uiRequirements": [],
     "functionalRequirements": [
     "Implement a GET route at '/home' that returns a welcome message.",
     "Implement a GET route at '/users' that returns a list of users.",

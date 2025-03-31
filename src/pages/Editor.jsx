@@ -240,6 +240,7 @@ export default function Editor() {
                   }}>
                     <ProblemsComponent 
                       problem={currentProblem}
+                      problemKey={key}
                       onFinishChallenge={handleFinishChallenge}
                     />
                   </div>

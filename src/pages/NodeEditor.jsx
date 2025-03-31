@@ -278,6 +278,7 @@ export default function NodeEditor() {
                   }}>
                     <ProblemsComponent 
                       problem={currentProblem}
+                      problemKey={key}
                       onFinishChallenge={handleFinishChallenge}
                     />
                   </div>
