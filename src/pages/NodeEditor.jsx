@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   SandpackProvider, 
   SandpackLayout, 
-  SandpackCodeEditor, 
+  SandpackCodeEditor,
   SandpackPreview,
   SandpackConsole,
   useSandpack
@@ -21,11 +21,12 @@ import GenerateSummary from '../components/GenerateSummary';
 import { Circles } from 'react-loader-spinner';
 import { usePageLoader } from "../contexts/PageLoaderContext";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
+import RequestTester from '../components/RequestTester';
 
-export default function Editor() {
+export default function NodeEditor() {
   const { key } = useParams();
   const navigate = useNavigate();
-  const [template, setTemplate] = useState('react');
+  const [template, setTemplate] = useState('node');
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [isSubmit, setIsSubmit] = useState(false);
@@ -35,6 +36,7 @@ export default function Editor() {
   const [currentProblem, setCurrentProblem] = useState(null);
   const [testResults, setTestResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRequestTesterOpen, setIsRequestTesterOpen] = useState(false);
   const { setLoading } = usePageLoader();
 
   const AutoSaveComponent = () => {
@@ -196,7 +198,7 @@ export default function Editor() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <select
-                    value={template}
+                    value="javascript"
                     onChange={handleTemplateChange}
                     style={{
                       padding: '5px',
@@ -206,8 +208,7 @@ export default function Editor() {
                       borderRadius: '4px'
                     }}
                   >
-                    <option value="static">Static (HTML/CSS/JS)</option>
-                    <option value="react">React</option>
+                    <option value="node">Node Js</option>
                   </select>
                   
                   <button
@@ -329,6 +330,20 @@ export default function Editor() {
               }}
             >
               <div>
+              <button
+                onClick={() => setIsRequestTesterOpen(!isRequestTesterOpen)}
+                style={{
+                    padding: '5px 15px',
+                    margin: '10px',
+                    backgroundColor: '#6851ff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                }}
+                >
+                {isRequestTesterOpen ? 'Close Tester' : 'API Tester'}
+                </button>
                 <button
                   onClick={() => setIsConsoleOpen(!isConsoleOpen)}
                   style={{
@@ -374,22 +389,29 @@ export default function Editor() {
               </button>
             </div>
 
-            {isChatOpen ? (
-              <AIChat
+            {isRequestTesterOpen ? (
+            <RequestTester
                 style={{ 
-                  height: isConsoleOpen ? '55%' : '94%',
-                  flex: 1
-                }}
-                chatKey={key}
-              />
-            ) : (
-              <SandpackPreview
-              style={{ 
                 height: isConsoleOpen ? '55%' : '94%',
                 flex: 1
-              }}
-              showOpenInCodeSandbox={false}
-              showNavigator={true}
+                }}
+            />
+            ) : isChatOpen ? (
+            <AIChat
+                style={{ 
+                height: isConsoleOpen ? '55%' : '94%',
+                flex: 1
+                }}
+                chatKey={key}
+            />
+            ) : (
+            <SandpackPreview
+                style={{ 
+                height: isConsoleOpen ? '55%' : '94%',
+                flex: 1
+                }}
+                showOpenInCodeSandbox={false}
+                showNavigator={true}
             />
             )}
             {isConsoleOpen && !isChatOpen && (

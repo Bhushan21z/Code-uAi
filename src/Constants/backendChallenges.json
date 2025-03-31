@@ -1,0 +1,58 @@
+{
+    "express-api": {
+    "title": "Express API - Build Basic Routes",
+    "description": "Create a simple Express API with basic GET and POST routes. The API should respond with appropriate JSON data based on requests.",
+    "functionalRequirements": [
+    "Implement a GET route at '/home' that returns a welcome message.",
+    "Implement a GET route at '/users' that returns a list of users.",
+    "Implement a POST route at '/users' that accepts JSON data and adds a user.",
+    "Ensure the API validates the request body for the 'POST /users' route."
+    ],
+    "preview": "https://i.ibb.co/MDvnLvL/Screenshot-from-2024-12-15-20-55-26.png",
+    "learningGoals": [
+    "Learn how to create an Express server.",
+    "Understand handling GET and POST requests.",
+    "Learn basic request validation using Express."
+    ],
+    "difficulty": "Beginner",
+    "testCases": [
+    {
+        "scenario": "Fetch the home route message",
+        "method": "GET",
+        "route": "/home",
+        "requestBody": null,
+        "expectedBehavior": "{ message: 'Welcome to Express API' }"
+    },
+    {
+        "scenario": "Fetch users list",
+        "method": "GET",
+        "route": "/users",
+        "requestBody": null,
+        "expectedBehavior": "[]"
+    },
+    {
+        "scenario": "Add a new user (valid data)",
+        "method": "POST",
+        "route": "/users",
+        "requestBody": { "name": "John Doe", "age": 25 },
+        "expectedBehavior": "{ success: true, user: { name: 'John Doe', age: 25 } }"
+    },
+    {
+        "scenario": "Add a new user (missing name)",
+        "method": "POST",
+        "route": "/users",
+        "requestBody": { "age": 30 },
+        "expectedBehavior": "{ error: 'Name is required' } with status 400"
+    },
+    {
+        "scenario": "Add a new user (invalid age type)",
+        "method": "POST",
+        "route": "/users",
+        "requestBody": { "name": "Alice", "age": "twenty" },
+        "expectedBehavior": "{ error: 'Age must be a number' } with status 400"
+    }
+    ],
+    "recommendedTechnologies": ["Node.js", "Express"]
+}
+
+}

@@ -42,6 +42,18 @@
           "active": true
         }
       }
+    },
+    "express-api": {
+      "files": {
+        "/index.js": {
+          "code": "const express = require('express');\nconst cors = require('cors');\n\nconst app = express();\n\napp.use(cors());\napp.use(express.json());\n\napp.get('/', (req, res) => res.json({ message: 'Hello from Docker!' }));\napp.get('/homeee', (req, res) => res.json({ message: 'Homeeeeee' }));\napp.post('/data', (req, res) => { res.json({ received: req.body }); });\n\napp.listen(4000, () => console.log('Server running on port 4000'));",
+          "active": true
+        },
+        "/package.json": {
+          "code": "{\n  \"dependencies\": {\n    \"express\": \"^4.18.2\",\n    \"cors\": \"^2.8.5\"\n  },\n  \"scripts\": {\n    \"start\": \"node index.js\"\n  },\n  \"main\": \"index.js\",\n  \"devDependencies\": {}\n}",
+          "active": true
+        }
+      }
     }
   }
   

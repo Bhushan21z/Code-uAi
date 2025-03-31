@@ -30,6 +30,7 @@
     "react-split": "^2.0.14",
     "react-syntax-highlighter": "^15.6.1",
     "recharts": "^2.15.1",
+    "sandpack-file-explorer": "0.0.7",
     "vitest": "^2.1.8",
     "web-vitals": "^2.1.4"
   },

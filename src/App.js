@@ -5,6 +5,7 @@ import ChallengesList from './pages/ChallengesList';
 import Editor from './pages/Editor';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import SummaryDashboard from './pages/SummaryDashboard';
+import NodeEditor from './pages/NodeEditor';
 import { PageLoaderProvider } from './contexts/PageLoaderContext';
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/challenges" element={<ChallengesList />} />
             <Route path="/editor/:key" element={<Editor />} />
+            <Route path="/node-editor/:key" element={<NodeEditor />} />
             <Route path="/summary/:key" element={<SummaryDashboard />} />
           </Routes>
         </Router>

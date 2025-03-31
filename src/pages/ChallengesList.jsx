@@ -1,11 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Card, Grid, CardMedia, CardContent, Typography, Chip, Button } from "@mui/material";
+import { Box, Card, Grid, CardMedia, CardContent, Typography, Chip, Button, Tabs, Tab } from "@mui/material";
 import { motion } from "framer-motion";
 import challengesData from "../Constants/challenges.json";
+import backendChallengesData from "../Constants/backendChallenges.json";
 
 export default function ChallengesList() {
   const navigate = useNavigate();
+  const [tabIndex, setTabIndex] = useState(0);
+
+  const handleChange = (event, newIndex) => {
+    setTabIndex(newIndex);
+  };
+
+  const selectedChallenges = tabIndex === 0 ? challengesData : backendChallengesData;
 
   return (
     <Box
@@ -32,9 +40,21 @@ export default function ChallengesList() {
           Available Challenges
         </Typography>
 
+        <Tabs
+          value={tabIndex}
+          onChange={handleChange}
+          centered
+          textColor="inherit"
+          indicatorColor="secondary"
+          sx={{ mb: 4 }}
+        >
+          <Tab label="Frontend" />
+          <Tab label="Backend" />
+        </Tabs>
+
         <Grid container spacing={4} justifyContent="center">
-          {Object.keys(challengesData).map((key) => {
-            const challenge = challengesData[key];
+          {Object.keys(selectedChallenges).map((key) => {
+            const challenge = selectedChallenges[key];
             
             return (
               <Grid item xs={12} sm={6} md={4} key={key}>
@@ -71,15 +91,15 @@ export default function ChallengesList() {
                     </Typography>
 
                     <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mb: 2 }}>
-                      {challenge.recommendedTechnologies.map((framework) => (
+                      {challenge.recommendedTechnologies.map((tech) => (
                         <Chip
-                          key={framework}
-                          label={framework}
+                          key={tech}
+                          label={tech}
                           sx={{
                             backgroundColor:
-                              framework === "React" ? "#61dafb33" :
-                              framework === "Vue" ? "#42b88333" :
-                              framework === "Angular" ? "#dd003133" : "#333",
+                              tech === "React" ? "#61dafb33" :
+                              tech === "Vue" ? "#42b88333" :
+                              tech === "Angular" ? "#dd003133" : "#333",
                             color: "#fff",
                           }}
                         />
@@ -96,7 +116,7 @@ export default function ChallengesList() {
                         fontWeight: "bold",
                         "&:hover": { backgroundColor: "#e52e71" },
                       }}
-                      onClick={() => navigate(`/editor/${key}`)}
+                      onClick={() => navigate(`${tabIndex === 0 ? '/editor' : '/node-editor'}/${key}`)}
                     >
                       Load Challenge
                     </Button>
