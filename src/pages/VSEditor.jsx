@@ -14,9 +14,10 @@ import CODE_TEMPLATES from '../Constants/challengesCodeTemplates.json';
 import PROBLEMS_DATA from "../Constants/challenges.json";
 import AIChat from '../components/AIChat';
 import ProblemsComponent from '../components/Problem';
-import GenerateResult from '../components/GenerateResult';
+import GenerateReview from '../components/GenerateReview';
 import GenerateSummary from '../components/GenerateSummary';
 import { Circles } from 'react-loader-spinner';
+import GenerateResult from '../components/GenerateResult';
 import { usePageLoader } from "../contexts/PageLoaderContext";
 
 export default function VSEditor() {
@@ -30,60 +31,137 @@ export default function VSEditor() {
   const [showProblem, setShowProblem] = useState(false);
   const [userCode, setUserCode] = useState({});
   const [currentProblem, setCurrentProblem] = useState(null);
-  const [testResults, setTestResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { setLoading } = usePageLoader();
-  const vscodeUrl = 'http://localhost:3000/?folder=/home/workspace/candidate1';
+  const [error, setError] = useState(null);
+  const [isTestsSet, setIsTestsSet] = useState(false);
+  const [testResults, setTestResults] = useState(null);
+  const [reviewPoints, setReviewPoints] = useState([]);
+  const [vscodeUrl, setVscodeUrl] = useState('');
+  const backendUrl = 'http://localhost:5000';
 
-  const AutoSaveComponent = () => {
-    const { sandpack } = useSandpack();
-
-    useEffect(() => {
-      const autoSaveInterval = setInterval(() => {
-        const excludedFiles = [
-          '/index.js', 
-          '/package.json', 
-          '/public/index.html'
-        ];
-
-        const filteredFiles = Object.fromEntries(
-          Object.entries(sandpack.files).filter(
-            ([filename]) => !excludedFiles.includes(filename)
-          )
-        );
-
-        if (Object.keys(filteredFiles).length > 0) {
-          setUserCode(filteredFiles);
-          localStorage.setItem(`userCode-${key}`, JSON.stringify(filteredFiles));
+  // Add this to your VSEditor component
+  useEffect(() => {
+    const initializeWorkspace = async () => {
+      try {
+        // Generate or get a unique user ID (you might use auth system in production)
+        const projectTemplate = PROBLEMS_DATA[key].guthubLink;
+        const userId = localStorage.getItem('userId') || `temp-${Date.now()}`;
+        localStorage.setItem('userId', userId);
+        
+        const response = await fetch(`${backendUrl}/api/init-workspace`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId, projectTemplate }),
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          setVscodeUrl(data.vscodeUrl);
+          console.log('Workspace initialized');
         }
-      }, 5000);
+      } catch (error) {
+        console.error('Failed to initialize workspace:', error);
+      }
+    };
 
-      return () => clearInterval(autoSaveInterval);
-    }, [sandpack.files]);
+    initializeWorkspace();
+  }, [key, vscodeUrl]);
 
-    return null;
-  };
+  useEffect(() => {
+    const setupTestsEnvironment = async () => {
+      try {
+        console.log('Setting up tests environment...');
+        const userId = localStorage.getItem('userId');
+        const response = await fetch(`${backendUrl}/api/build-docker-image/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setIsTestsSet(true);
+          console.log('Tests environment setup:');
+        }
+      } catch (error) {
+        console.error('Failed to setup tests environment:', error);
+      }
+    };
+
+    setupTestsEnvironment();
+  }, [key]);
+
+  useEffect(() => {
+    const fetchProjectFiles = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        const response = await fetch(`${backendUrl}/api/project-files/${userId}`);
+        const data = await response.json();
+        
+        if (data.error) {
+          setError(data.error);
+          return;
+        }
+        
+        setUserCode(data.files);
+        localStorage.setItem(`userCode-${key}`, JSON.stringify(data.files));
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch project files');
+        console.error('Error fetching files:', err);
+      }
+    };
+
+    fetchProjectFiles();
+
+    const pollInterval = setInterval(fetchProjectFiles, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [key]);
 
   useEffect(() => {
     setCurrentProblem(PROBLEMS_DATA[key]);
     localStorage.setItem(`problemData-${key}`, JSON.stringify(PROBLEMS_DATA[key]));
   }, [key]);
 
-  useEffect(() => {
-    const storedCode = JSON.parse(localStorage.getItem(`userCode-${key}`));
-    if (storedCode) {
-      setUserCode(storedCode);
-    } else {
-      setUserCode(CODE_TEMPLATES[key]?.files || {});
+  const runTestcases = async () => {
+    console.log('Running testcases...');
+    try {
+      const userId = localStorage.getItem('userId');
+      const response = await fetch(`${backendUrl}/api/run-tests/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
+      console.log('Test Results:');
+      setTestResults(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to run testcases');
+      console.error('Error running testcases:', err);
     }
-  }, [key]);
+  };
+
+  const handleClose = () => {
+    setIsSubmit(false);
+  };
 
   const handleSubmit = async () => {
     setIsLoading(true);
     if (!isSubmit) {
+      await runTestcases();
       const challengeData = JSON.parse(localStorage.getItem(`problemData-${key}`));
-      const resultData = await GenerateResult(challengeData, userCode);
-      setTestResults(resultData);
+      const resultData = await GenerateReview(challengeData, userCode);
+      setReviewPoints(resultData);
     }
     setIsSubmit(!isSubmit);
     setIsLoading(false);
@@ -102,9 +180,9 @@ export default function VSEditor() {
   const handleFinishChallenge = async () => {
     setLoading(true);
     const summaryResult = await GenerateSummary(
-      currentProblem, 
-      userCode, 
-      PROBLEMS_DATA[key], 
+      currentProblem,
+      userCode,
+      PROBLEMS_DATA[key],
       JSON.parse(localStorage.getItem(`chatHistory${key}`)) || []
     );
     const resultData = await GenerateResult(currentProblem, userCode);
@@ -205,7 +283,6 @@ export default function VSEditor() {
                     allow="clipboard-read; clipboard-write"
                     style={{ flex: 1, width: '100%', border: 'none' }}
                   />
-                  <AutoSaveComponent />
                 </div>
                   <div
                     style={{ 
@@ -228,24 +305,47 @@ export default function VSEditor() {
                       </div>
                     ) : (
                       !isSubmit ? (
-                        <button
-                          onClick={handleSubmit}
-                          style={{
-                            padding: '10px 15px',
-                            margin: '10px',
-                            backgroundColor: '#4CAF50',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Submit Code
-                        </button>
+                        <div>
+                          {isTestsSet && (
+                            <button
+                              onClick={handleSubmit}
+                              style={{
+                                padding: '10px 15px',
+                                margin: '10px',
+                                backgroundColor: '#4CAF50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Run Tests
+                            </button>
+                          )}
+                          <button
+                            onClick={handleFinishChallenge}
+                            style={{
+                              padding: '10px 15px',
+                              backgroundColor: '#4CAF50',
+                              margin: '10px',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              transition: 'background-color 0.3s ease'
+                            }}
+                            onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
+                            onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
+                          >
+                            Finish Challenge
+                          </button>
+                        </div>
                       ) : (
                         <ShowTestResults
-                          testResults={testResults}
-                          handleSubmit={handleSubmit}
+                          aiReviewPoints={reviewPoints}
+                          testSummary={testResults?.summary || []}
+                          stats={testResults?.stats || []}
+                          handleClose={handleClose}
                           style={{
                             height: '100%',
                             width: '100%'
@@ -253,23 +353,6 @@ export default function VSEditor() {
                         />
                       )
                     )}
-                    <button
-                      onClick={handleFinishChallenge}
-                      style={{
-                        padding: '10px 15px',
-                        backgroundColor: '#4CAF50',
-                        margin: '10px',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.3s ease'
-                      }}
-                      onMouseOver={(e) => e.target.style.backgroundColor = '#45a049'}
-                      onMouseOut={(e) => e.target.style.backgroundColor = '#4CAF50'}
-                    >
-                      Finish Challenge
-                    </button>
                   </div>
                 </div>
               </div>
