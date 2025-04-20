@@ -1,10 +1,31 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { CheckCircle, AlertCircle, Award, Zap, ArrowUp, Book, Code, Terminal } from 'lucide-react';
-import dashboardData from '../Constants/dummySummary';
+import mockDashboardData from '../Constants/dummySummary';
 import './dashboard.css';
 
 export default function AssessmentDashboard() {
+  const { key } = useParams();
+  const mockTestcaseData = {
+    "success": true,
+    "summary": [
+      "PASS src/tests/TodoInput.test.js",
+      "PASS src/tests/TodoList.test.js"
+    ],
+    "stats": {
+      "passedSuites": 2,
+      "totalSuites": 2,
+      "passedTests": 6,
+      "totalTests": 6,
+      "snapshots": 0,
+      "time": "3.041 s"
+    }
+  };
+
+  const dashboardData = JSON.parse(localStorage.getItem(`testSummary${key}`)) || mockDashboardData;
+  const testcaseData = JSON.parse(localStorage.getItem(`testcaseData${key}`)) || mockTestcaseData;
+
   const [activeTab, setActiveTab] = useState('overview');
   
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -106,8 +127,8 @@ export default function AssessmentDashboard() {
             <PieChart width={130} height={130}>
               <Pie
                 data={[
-                  { name: 'Passed', value: dashboardData.testcases.stats.passedTests },
-                  { name: 'Failed', value: dashboardData.testcases.stats.totalTests - dashboardData.testcases.stats.passedTests }
+                  { name: 'Passed', value: testcaseData.stats.passedTests },
+                  { name: 'Failed', value: testcaseData.stats.totalTests - testcaseData.stats.passedTests }
                 ]}
                 cx={65}
                 cy={65}
@@ -132,13 +153,13 @@ export default function AssessmentDashboard() {
           <StatItem 
             icon={CheckCircle} 
             label="Test Suites" 
-            value={`${dashboardData.testcases.stats.passedSuites}/${dashboardData.testcases.stats.totalSuites} passed`} 
+            value={`${testcaseData.stats.passedSuites}/${testcaseData.stats.totalSuites} passed`} 
             color="text-green-500" 
           />
           <StatItem 
             icon={Zap} 
             label="Total Time" 
-            value={dashboardData.testcases.stats.time} 
+            value={testcaseData.stats.time} 
             color="text-amber-500" 
           />
         </div>
@@ -147,9 +168,9 @@ export default function AssessmentDashboard() {
       <Card title="Learning Progress" className="lg:col-span-2">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dashboardData.learningProgress.weeklyProgress}>
+            <LineChart data={dashboardData.learningProgress.TimeProgress}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="week" />
+              <XAxis dataKey="time" />
               <YAxis domain={[0, 100]} />
               <Tooltip />
               <Line 
@@ -315,12 +336,12 @@ export default function AssessmentDashboard() {
         </div>
       </Card>
       
-      <Card title="Weekly Progress Trend" className="lg:col-span-2">
+      <Card title="Time Progress Trend" className="lg:col-span-2">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dashboardData.learningProgress.weeklyProgress}>
+            <LineChart data={dashboardData.learningProgress.TimeProgress}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="week" />
+              <XAxis dataKey="time" />
               <YAxis domain={[0, 100]} />
               <Tooltip />
               <Legend />

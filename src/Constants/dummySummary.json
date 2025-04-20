@@ -1,20 +1,5 @@
 {
     "overallScore": 82,
-    "testcases": {
-      "success": true,
-      "summary": [
-        "PASS src/tests/TodoInput.test.js",
-        "PASS src/tests/TodoList.test.js"
-      ],
-      "stats": {
-        "passedSuites": 2,
-        "totalSuites": 2,
-        "passedTests": 6,
-        "totalTests": 6,
-        "snapshots": 0,
-        "time": "3.041 s"
-      }
-    },
     "codeQuality": {
       "score": 75,
       "strengths": [
@@ -54,17 +39,17 @@
         "Basic testing with `react-testing-library`"
       ],
       "progressIndicator": 65,
-      "weeklyProgress": [
-        { "week": "Week 1", "progress": 20 },
-        { "week": "Week 2", "progress": 30 },
-        { "week": "Week 3", "progress": 40 },
-        { "week": "Week 4", "progress": 20 },
-        { "week": "Week 5", "progress": 30 },
-        { "week": "Week 6", "progress": 50 },
-        { "week": "Week 7", "progress": 60 },
-        { "week": "Week 8", "progress": 80 },
-        { "week": "Week 9", "progress": 100 },
-        { "week": "Week 10", "progress": 100 }
+      "TimeProgress": [
+        { "time": "5 mins", "progress": 20 },
+        { "time": "10 mins", "progress": 30 },
+        { "time": "15 mins", "progress": 40 },
+        { "time": "20 mins", "progress": 20 },
+        { "time": "25 mins", "progress": 30 },
+        { "time": "30 mins", "progress": 50 },
+        { "time": "35 mins", "progress": 60 },
+        { "time": "40 mins", "progress": 80 },
+        { "time": "45 mins", "progress": 100 },
+        { "time": "50 mins", "progress": 100 }
       ]
     },
     "aiInteractionSummary": {

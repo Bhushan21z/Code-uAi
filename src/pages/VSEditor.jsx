@@ -17,7 +17,6 @@ import ProblemsComponent from '../components/Problem';
 import GenerateReview from '../components/GenerateReview';
 import GenerateSummary from '../components/GenerateSummary';
 import { Circles } from 'react-loader-spinner';
-import GenerateResult from '../components/GenerateResult';
 import { usePageLoader } from "../contexts/PageLoaderContext";
 
 export default function VSEditor() {
@@ -38,7 +37,7 @@ export default function VSEditor() {
   const [testResults, setTestResults] = useState(null);
   const [reviewPoints, setReviewPoints] = useState([]);
   const [vscodeUrl, setVscodeUrl] = useState('');
-  const backendUrl = 'http://localhost:5000';
+  const backendUrl = 'http://54.226.55.204:5000';
 
   // Add this to your VSEditor component
   useEffect(() => {
@@ -177,6 +176,23 @@ export default function VSEditor() {
     setCurrentProblem(newProblemData);
   };
 
+  const destroyWorkspace = async () => {
+    console.log('Destroying workspace...');
+    const userId = localStorage.getItem('userId');
+    const response = await fetch(`${backendUrl}/api/destroy-workspace/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    if (data.error) {
+      setError(data.error);
+      return;
+    }
+    console.log('Workspace destroyed');
+  };
+
   const handleFinishChallenge = async () => {
     setLoading(true);
     const summaryResult = await GenerateSummary(
@@ -185,15 +201,19 @@ export default function VSEditor() {
       PROBLEMS_DATA[key],
       JSON.parse(localStorage.getItem(`chatHistory${key}`)) || []
     );
-    const resultData = await GenerateResult(currentProblem, userCode);
+    await runTestcases();
+    const resultData = testResults;
     
     if(summaryResult && resultData){
       localStorage.setItem(`testSummary${key}`, JSON.stringify(summaryResult));
       localStorage.setItem(`testcaseData${key}`, JSON.stringify(resultData));
-      navigate(`/summary/${key}`); 
+    } else if(summaryResult && !resultData) {
+      localStorage.setItem(`testSummary${key}`, JSON.stringify(summaryResult));
     } else {
       alert('Error Generating your result Summary. Please Try Again.')
     }
+    await destroyWorkspace();
+    navigate(`/summary/${key}`); 
     setLoading(false);
   };
 
