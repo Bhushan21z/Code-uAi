@@ -1,6 +1,7 @@
 {
     "login-page": {
       "title": "Login Page",
+      "techStack": ["React"],
       "guthubLink": "https://github.com/Bhushan21z/problem-todo-list",
       "description": "Create a modern, responsive login and registration interface with client-side validation and interactive features. Also modify UI as shown in the preview.",
       "uiRequirements": [
@@ -47,6 +48,7 @@
     },
     "todo-app": {
       "title": "Todo Application",
+      "techStack": ["React"],
       "guthubLink": "https://github.com/Bhushan21z/problem-todo-list",
       "description": "Build a responsive todo app with CRUD operations. Users should be able to add, edit, delete, and mark tasks as completed.",
       "uiRequirements": [
@@ -86,6 +88,7 @@
     },
     "weather-app": {
       "title": "Weather App",
+      "techStack": ["React"],
       "guthubLink": "https://github.com/Bhushan21z/problem-todo-list",
       "description": "Create a real-time weather application that fetches weather data from an API and displays the current conditions based on user input.",
       "uiRequirements": [
