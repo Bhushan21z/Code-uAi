@@ -37,7 +37,7 @@ export default function VSEditor() {
   const [testResults, setTestResults] = useState(null);
   const [reviewPoints, setReviewPoints] = useState([]);
   const [vscodeUrl, setVscodeUrl] = useState('');
-  const backendUrl = 'http://54.226.55.204:5000';
+  const backendUrl = 'https://vsnode.paclabs.com';
 
   // Add this to your VSEditor component
   useEffect(() => {
