@@ -6,11 +6,10 @@ import {
   SandpackLayout, 
   SandpackPreview,
   SandpackConsole,
-  useSandpack
 } from "@codesandbox/sandpack-react";
 import { amethyst } from "@codesandbox/sandpack-themes";
+import Split from 'react-split';
 import ShowTestResults from "../components/ShowTestResults";
-import CODE_TEMPLATES from '../Constants/challengesCodeTemplates.json';
 import PROBLEMS_DATA from "../Constants/challenges.json";
 import AIChat from '../components/AIChat';
 import ProblemsComponent from '../components/Problem';
@@ -18,6 +17,7 @@ import GenerateReview from '../components/GenerateReview';
 import GenerateSummary from '../components/GenerateSummary';
 import { Circles } from 'react-loader-spinner';
 import { usePageLoader } from "../contexts/PageLoaderContext";
+import './editor.css';
 
 export default function VSEditor() {
   const { key } = useParams();
@@ -104,7 +104,7 @@ export default function VSEditor() {
           setError(data.error);
           return;
         }
-        
+      
         setUserCode(data.files);
         localStorage.setItem(`userCode-${key}`, JSON.stringify(data.files));
         setError(null);
@@ -229,70 +229,83 @@ export default function VSEditor() {
         flexDirection: 'column', 
         height: '100vh'
       }}>
-        <SandpackLayout style={{ flex: 1 }}>
-        
-          { !isFullScreen && (
+        <SandpackLayout />
+        <Split 
+          className="split-pane"
+          sizes={[65, 35]}
+          minSize={[300, 300]}
+          expandToMin={false}
+          gutterSize={10}
+          gutterAlign="center"
+          snapOffset={30}
+          dragInterval={1}
+          direction="horizontal"
+          cursor="col-resize"
+          style={{ display: 'flex', flex: 1, backgroundColor: '#0A0A23' }}
+        >
+          {/* Left Panel (Editor) */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%',
+            overflow: 'hidden'
+          }}>
+            <div className="file-management"
+              style={{
+                display: 'flex',
+                padding: '10px',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  onClick={() => handleShowProblem(!showProblem)}
+                  style={{
+                    padding: '5px 10px',
+                    marginLeft: '50px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {showProblem ? 'Hide Challenge' : 'Show Challenge'}
+                </button>
+              </div>
+            </div>
+            
             <div style={{ 
               display: 'flex', 
-              flexDirection: 'column', 
-              flex: 1 
+              flex: 1,
+              overflow: 'hidden'
             }}>
-              <div className="file-management"
-                style={{
-                  display: 'flex',
-                  padding: '10px',
-                  alignItems: 'center',
-                  width: '60vw',
-                  justifyContent: 'space-between'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <button
-                    onClick={() => handleShowProblem(!showProblem)}
-                    style={{
-                      padding: '5px 10px',
-                      marginLeft: '50px',
-                      backgroundColor: '#4CAF50',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {showProblem ? 'Hide Challenge' : 'Show Challenge'}
-                  </button>
-                </div>
-              </div>
-              <div style={{ 
-                display: 'flex', 
-                flex: 1
-              }}>
-                {showProblem && (
-                  <div style={{ 
-                    width: '40%', 
-                    overflowY: 'auto', 
-                    backgroundColor: '#2a2a2a',
-                    color: 'white',
-                    padding: '15px'
-                  }}>
-                    <ProblemsComponent 
-                      problem={currentProblem}
-                      problemKey={key}
-                      onFinishChallenge={handleFinishChallenge}
-                    />
-                  </div>
-                )}
-                
+              {showProblem && (
                 <div style={{ 
-                  flex: 1, 
-                  display: 'flex', 
-                  flexDirection: 'column' 
-                }}>
-                <div style={{ 
-                  flex: 1, 
+                  width: '40%', 
                   overflowY: 'auto', 
-                  maxHeight: isSubmit ? '60vh' : '89vh',
-                  paddingBottom: '10px',
+                  backgroundColor: '#2a2a2a',
+                  color: 'white',
+                  padding: '15px'
+                }}>
+                  <ProblemsComponent 
+                    problem={currentProblem}
+                    problemKey={key}
+                    onFinishChallenge={handleFinishChallenge}
+                  />
+                </div>
+              )}
+              
+              <div style={{ 
+                flex: 1, 
+                display: 'flex', 
+                flexDirection: 'column',
+                overflow: 'hidden'
+              }}>
+                <div style={{ 
+                  flex: 1, 
+                  overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column'
                 }}>
@@ -304,14 +317,14 @@ export default function VSEditor() {
                     style={{ flex: 1, width: '100%', border: 'none' }}
                   />
                 </div>
-                  <div
-                    style={{ 
-                      display: 'flex', 
-                      justifyContent: 'flex-end',
-                      padding: '0 10px'
-                    }}
-                  >
-                    {isLoading ? (
+                <div
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end',
+                    padding: '0 10px'
+                  }}
+                >
+                  {isLoading ? (
                       <div style={{ padding: '10px 15px', margin: '10px' }}>
                         <Circles
                           height="40"
@@ -377,9 +390,13 @@ export default function VSEditor() {
                 </div>
               </div>
             </div>
-          )}
-
-          <div style={{ flex: 1 }}>
+          {/* Right Panel (Preview/Chat) */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            height: '100%',
+            overflow: 'hidden'
+          }}>
             <div
               style={{ 
                 display: 'flex', 
@@ -417,7 +434,7 @@ export default function VSEditor() {
                   {isChatOpen ? 'Close Chat' : 'Chat with AI'}
                 </button>
               </div>
-              <button
+              {/* <button
                 onClick={() => setIsFullScreen(!isFullScreen)}
                 style={{
                   padding: '7px 15px',
@@ -430,7 +447,7 @@ export default function VSEditor() {
                 }}
               >
                 {isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
-              </button>
+              </button> */}
             </div>
 
             {isChatOpen ? (
@@ -443,19 +460,19 @@ export default function VSEditor() {
               />
             ) : (
               <SandpackPreview
-              style={{ 
-                height: isConsoleOpen ? '55%' : '94%',
-                flex: 1
-              }}
-              showOpenInCodeSandbox={false}
-              showNavigator={true}
-            />
+                style={{ 
+                  height: isConsoleOpen ? '55%' : '94%',
+                  flex: 1
+                }}
+                showOpenInCodeSandbox={false}
+                showNavigator={true}
+              />
             )}
             {isConsoleOpen && !isChatOpen && (
               <SandpackConsole style={{ height: '40%', backgroundColor: '#272729' }} />
             )}
           </div>
-        </SandpackLayout>
+        </Split>
       </div>
     </SandpackProvider>
   );
