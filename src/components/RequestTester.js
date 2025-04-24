@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import CODE_TEMPLATES from '../Constants/challengesCodeTemplates.json';
 import axios from 'axios';
 
-function RequestTester({problemKey}) {
+function RequestTester() {
   const [url, setUrl] = useState('/your-endpoint');
   const [method, setMethod] = useState('POST');
   const [headers, setHeaders] = useState('{\n  "Content-Type": "application/json"\n}');
@@ -10,32 +9,16 @@ function RequestTester({problemKey}) {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const serverUrl = 'http://localhost:5000';
-
-  const fetchUserCodeforServer = () => {
-    const storedCode = localStorage.getItem(`userCode-${problemKey}`);
-    const files = storedCode ? JSON.parse(storedCode) : CODE_TEMPLATES[problemKey]?.files;
-  
-    if (!files) return null;
-  
-    return {
-      project: Object.fromEntries(
-        Object.entries(files).map(([filePath, { code }]) => [
-          filePath.replace("/", ""), // Remove leading slash
-          filePath.endsWith(".json") ? JSON.parse(code) : code,
-        ])
-      ),
-    };
-  }
+  const serverUrl = 'https://vs.paclabs.com';
+  const userId = localStorage.getItem('userId');
 
   const frameRequestBody = () => {
-    const projectFiles = fetchUserCodeforServer()?.project;
-    if (!projectFiles) return null;
     const objectToReturn = {
-      containerId: localStorage.getItem(`containerId-${problemKey}`),
       method,
-      route: url,
-      project_files: projectFiles,
+      path: url,
+      params: {},
+      headers: JSON.parse(headers),
+      body: JSON.parse(body)
     }
 
     return objectToReturn;
@@ -45,26 +28,22 @@ function RequestTester({problemKey}) {
     try {
       setLoading(true);
       const reqBody = frameRequestBody();
-      const res = await axios.post(`${serverUrl}/execute`, reqBody);
-      
-      const contentType = res.headers.get('content-type');
-      let data;
-      
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        data = await res.text();
-      }
+      console.log(reqBody);
+      console.log(`${serverUrl}/api/run-api/${userId}`);
+      const res = await axios.post(`${serverUrl}/api/run-api/${userId}`, reqBody);
       
       setResponse({
         status: res.status,
         statusText: res.statusText,
-        headers: Object.fromEntries([...res.headers.entries()]),
-        data
+        headers: res.headers,
+        data: res.data
       });
     } catch (error) {
       setResponse({
-        error: error.message
+        error: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
       });
     } finally {
       setLoading(false);

@@ -16,6 +16,7 @@ import ProblemsComponent from '../components/Problem';
 import GenerateReview from '../components/GenerateReview';
 import GenerateSummary from '../components/GenerateSummary';
 import { Circles } from 'react-loader-spinner';
+import RequestTester from '../components/RequestTester';
 import { usePageLoader } from "../contexts/PageLoaderContext";
 import './editor.css';
 
@@ -37,7 +38,8 @@ export default function VSEditor() {
   const [testResults, setTestResults] = useState(null);
   const [reviewPoints, setReviewPoints] = useState([]);
   const [vscodeUrl, setVscodeUrl] = useState('');
-  const backendUrl = 'https://vsnode.paclabs.com';
+  const [challengeType, setChallengeType] = useState('');
+  const backendUrl = 'https://vs.paclabs.com';
 
   // Add this to your VSEditor component
   useEffect(() => {
@@ -123,6 +125,7 @@ export default function VSEditor() {
 
   useEffect(() => {
     setCurrentProblem(PROBLEMS_DATA[key]);
+    setChallengeType(PROBLEMS_DATA[key].type);
     localStorage.setItem(`problemData-${key}`, JSON.stringify(PROBLEMS_DATA[key]));
   }, [key]);
 
@@ -137,6 +140,7 @@ export default function VSEditor() {
         },
       });
       const data = await response.json();
+      console.log(data);
       if (data.error) {
         setError(data.error);
         return;
@@ -377,7 +381,7 @@ export default function VSEditor() {
                         <ShowTestResults
                           aiReviewPoints={reviewPoints}
                           testSummary={testResults?.summary || []}
-                          stats={testResults?.stats || []}
+                          stats={testResults?.result || []}
                           handleClose={handleClose}
                           style={{
                             height: '100%',
@@ -459,19 +463,29 @@ export default function VSEditor() {
                 chatKey={key}
               />
             ) : (
-              <SandpackPreview
-                style={{ 
-                  height: isConsoleOpen ? '55%' : '94%',
-                  flex: 1
-                }}
-                showOpenInCodeSandbox={false}
-                showNavigator={true}
-              />
+              challengeType === 'backend' ? (
+                <RequestTester
+                  style={{ 
+                    height: isConsoleOpen ? '55%' : '94%',
+                    flex: 1
+                  }}
+                  problemKey={key}
+                />
+              ) : (
+                <SandpackPreview
+                  style={{ 
+                    height: isConsoleOpen ? '55%' : '94%',
+                    flex: 1
+                  }}
+                  showOpenInCodeSandbox={false}
+                  showNavigator={true}
+                />
+              )
             )}
             {isConsoleOpen && !isChatOpen && (
               <SandpackConsole style={{ height: '40%', backgroundColor: '#272729' }} />
             )}
-          </div>
+            </div>
         </Split>
       </div>
     </SandpackProvider>
