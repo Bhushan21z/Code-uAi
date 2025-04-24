@@ -39,7 +39,7 @@ export default function VSEditor() {
   const [reviewPoints, setReviewPoints] = useState([]);
   const [vscodeUrl, setVscodeUrl] = useState('');
   const [challengeType, setChallengeType] = useState('');
-  const backendUrl = 'http://localhost:5000';
+  const backendUrl = 'https://vs.paclabs.com';
 
   // Add this to your VSEditor component
   useEffect(() => {

@@ -9,7 +9,7 @@ function RequestTester() {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const serverUrl = 'http://localhost:5000';
+  const serverUrl = 'https://vs.paclabs.com';
   const userId = localStorage.getItem('userId');
 
   const frameRequestBody = () => {
