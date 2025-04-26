@@ -28,8 +28,6 @@ function RequestTester() {
     try {
       setLoading(true);
       const reqBody = frameRequestBody();
-      console.log(reqBody);
-      console.log(`${serverUrl}/api/run-api/${userId}`);
       const res = await axios.post(`${serverUrl}/api/run-api/${userId}`, reqBody);
       
       setResponse({

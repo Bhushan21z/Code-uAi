@@ -26,6 +26,7 @@ export default function VSEditor() {
   const [template, setTemplate] = useState('react');
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [isProjectDirectorySet, setIsProjectDirectorySet] = useState(false);
   const [isSubmit, setIsSubmit] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showProblem, setShowProblem] = useState(false);
@@ -39,9 +40,60 @@ export default function VSEditor() {
   const [reviewPoints, setReviewPoints] = useState([]);
   const [vscodeUrl, setVscodeUrl] = useState('');
   const [challengeType, setChallengeType] = useState('');
+  const [timeLeft, setTimeLeft] = useState(null);
   const backendUrl = 'https://vsnode.paclabs.com';
 
-  // Add this to your VSEditor component
+  useEffect(() => {
+    if (key && PROBLEMS_DATA[key]) {
+      const savedTime = localStorage.getItem(`timeLeft-${key}`);
+      if (savedTime) {
+        setTimeLeft(parseInt(savedTime));
+      } else {
+        const timeInMinutes = parseInt(PROBLEMS_DATA[key].time);
+        setTimeLeft(timeInMinutes * 60); // Convert to seconds
+      }
+    }
+  }, [key]);
+
+  useEffect(() => {
+    if (timeLeft === null) return;
+
+    // Save time to localStorage whenever it changes
+    if (timeLeft > 0) {
+      localStorage.setItem(`timeLeft-${key}`, timeLeft.toString());
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prevTime => {
+        if (prevTime <= 0) {
+          clearInterval(timer);
+          localStorage.removeItem(`timeLeft-${key}`); // Clear the time when it reaches 0
+          handleFinishChallenge();
+          return 0;
+        }
+        const newTime = prevTime - 1;
+        localStorage.setItem(`timeLeft-${key}`, newTime.toString());
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, key]);
+
+  useEffect(() => {
+    return () => {
+      if (timeLeft && timeLeft > 0) {
+        localStorage.setItem(`timeLeft-${key}`, timeLeft.toString());
+      }
+    };
+  }, [timeLeft, key]);
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     const initializeWorkspace = async () => {
       try {
@@ -62,6 +114,7 @@ export default function VSEditor() {
         if (data.success) {
           setVscodeUrl(data.vscodeUrl);
           console.log('Workspace initialized');
+          setIsProjectDirectorySet(true);
         }
       } catch (error) {
         console.error('Failed to initialize workspace:', error);
@@ -92,8 +145,10 @@ export default function VSEditor() {
       }
     };
 
-    setupTestsEnvironment();
-  }, [key]);
+    if (isProjectDirectorySet) {
+      setupTestsEnvironment();
+    }
+  }, [key, isProjectDirectorySet]);
 
   useEffect(() => {
     const fetchProjectFiles = async () => {
@@ -116,11 +171,11 @@ export default function VSEditor() {
       }
     };
 
-    fetchProjectFiles();
-
-    const pollInterval = setInterval(fetchProjectFiles, 5000);
-
-    return () => clearInterval(pollInterval);
+    if(PROBLEMS_DATA[key].type === 'frontend'){
+      fetchProjectFiles();
+      const pollInterval = setInterval(fetchProjectFiles, 5000);
+      return () => clearInterval(pollInterval);
+    }
   }, [key]);
 
   useEffect(() => {
@@ -263,11 +318,17 @@ export default function VSEditor() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/elitmus.png" 
+                  alt="eLitmus Logo" 
+                  style={{
+                    height: '35px'
+                  }}
+                />
                 <button
                   onClick={() => handleShowProblem(!showProblem)}
                   style={{
                     padding: '5px 10px',
-                    marginLeft: '50px',
                     backgroundColor: '#4CAF50',
                     color: 'white',
                     border: 'none',
@@ -277,6 +338,20 @@ export default function VSEditor() {
                 >
                   {showProblem ? 'Hide Challenge' : 'Show Challenge'}
                 </button>
+              </div>
+              <div style={{
+                padding: '5px 10px',
+                backgroundColor: timeLeft <= 300 ? '#ff4444' : 'grey',
+                color: 'white',
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+                fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}>
+                <span role="img" aria-label="timer">⏱️</span>
+                {timeLeft !== null ? formatTime(timeLeft) : '--:--'}
               </div>
             </div>
             
@@ -343,22 +418,21 @@ export default function VSEditor() {
                     ) : (
                       !isSubmit ? (
                         <div>
-                          {isTestsSet && (
-                            <button
-                              onClick={handleSubmit}
-                              style={{
-                                padding: '10px 15px',
-                                margin: '10px',
-                                backgroundColor: '#4CAF50',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Run Tests
-                            </button>
-                          )}
+                          <button
+                            onClick={handleSubmit}
+                            style={{
+                              padding: '10px 15px',
+                              margin: '10px',
+                              backgroundColor: isTestsSet ? '#4CAF50' : 'grey',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                            disabled={!isTestsSet}
+                          >
+                            Run Tests
+                          </button>
                           <button
                             onClick={handleFinishChallenge}
                             style={{

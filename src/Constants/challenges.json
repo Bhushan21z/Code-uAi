@@ -2,6 +2,7 @@
     "login-page": {
       "title": "Login Page",
       "type": "frontend",
+      "time": "60",
       "techStack": ["React"],
       "guthubLink": "https://github.com/Bhushan21z/problem-todo-list",
       "description": "Create a modern, responsive login and registration interface with client-side validation and interactive features. Also modify UI as shown in the preview.",
@@ -50,6 +51,7 @@
     "todo-app": {
       "title": "Todo Application",
       "type": "frontend",
+      "time": "60",
       "techStack": ["React"],
       "guthubLink": "https://github.com/Bhushan21z/problem-todo-list",
       "description": "Build a responsive todo app with CRUD operations. Users should be able to add, edit, delete, and mark tasks as completed.",
@@ -91,6 +93,7 @@
     "weather-app": {
       "title": "Weather App",
       "type": "frontend",
+      "time": "60",
       "techStack": ["React"],
       "guthubLink": "https://github.com/Bhushan21z/problem-todo-list",
       "description": "Create a real-time weather application that fetches weather data from an API and displays the current conditions based on user input.",
@@ -131,6 +134,7 @@
     "express-api": {
       "title": "Express API - Build Basic Routes",
       "type": "backend",
+      "time": "60",
       "techStack": ["Node.js", "Express"],
       "guthubLink": "https://github.com/Bhushan21z/problem-express-api",
       "description": "Create a simple Express API with basic GET and POST routes. The API should respond with appropriate JSON data based on requests.",
