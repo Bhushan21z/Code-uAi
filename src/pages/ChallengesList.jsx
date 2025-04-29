@@ -1,19 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Card, Grid, CardMedia, CardContent, Typography, Chip, Button, Tabs, Tab } from "@mui/material";
 import { motion } from "framer-motion";
-import challengesData from "../Constants/challenges.json";
-import backendChallengesData from "../Constants/backendChallenges.json";
 
 export default function ChallengesList() {
   const navigate = useNavigate();
-  const [tabIndex, setTabIndex] = useState(0);
+  const [challenges, setChallenges] = useState([]);
 
-  const handleChange = (event, newIndex) => {
-    setTabIndex(newIndex);
+  useEffect(() => {
+    fetchChallenges();
+  }, []);
+
+  const fetchChallenges = async () => {
+    try {
+      const userEmail = JSON.parse(localStorage.getItem('user')).email;
+      const response = await fetch('http://localhost:5000/api/userChallenges/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: userEmail }),
+      });
+      const data = await response.json();
+      setChallenges(data.data);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+    }
   };
-
-  const selectedChallenges = tabIndex === 0 ? challengesData : backendChallengesData;
 
   return (
     <Box
@@ -40,24 +53,10 @@ export default function ChallengesList() {
           Available Challenges
         </Typography>
 
-        <Tabs
-          value={tabIndex}
-          onChange={handleChange}
-          centered
-          textColor="inherit"
-          indicatorColor="secondary"
-          sx={{ mb: 4 }}
-        >
-          <Tab label="Frontend" />
-          <Tab label="Backend" />
-        </Tabs>
-
         <Grid container spacing={4} justifyContent="center">
-          {Object.keys(selectedChallenges).map((key) => {
-            const challenge = selectedChallenges[key];
-            
+          {challenges.map((challenge) => {
             return (
-              <Grid item xs={12} sm={6} md={4} key={key}>
+              <Grid item xs={12} sm={6} md={4} key={challenge._id}>
                 <Card
                   sx={{
                     backgroundColor: "#1e1e2f",
@@ -116,7 +115,7 @@ export default function ChallengesList() {
                         fontWeight: "bold",
                         "&:hover": { backgroundColor: "#e52e71" },
                       }}
-                      onClick={() => navigate(`${tabIndex === 0 ? '/editor' : '/node-editor'}/${key}`)}
+                      onClick={() => navigate(`/editor/${challenge.userChallengeId}`)}
                     >
                       Load Challenge
                     </Button>

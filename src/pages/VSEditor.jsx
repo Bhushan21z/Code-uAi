@@ -10,11 +10,9 @@ import {
 import { amethyst } from "@codesandbox/sandpack-themes";
 import Split from 'react-split';
 import ShowTestResults from "../components/ShowTestResults";
-import PROBLEMS_DATA from "../Constants/challenges.json";
 import AIChat from '../components/AIChat';
 import ProblemsComponent from '../components/Problem';
 import GenerateReview from '../components/GenerateReview';
-import GenerateSummary from '../components/GenerateSummary';
 import { Circles } from 'react-loader-spinner';
 import RequestTester from '../components/RequestTester';
 import { usePageLoader } from "../contexts/PageLoaderContext";
@@ -41,24 +39,28 @@ export default function VSEditor() {
   const [vscodeUrl, setVscodeUrl] = useState('');
   const [challengeType, setChallengeType] = useState('');
   const [timeLeft, setTimeLeft] = useState(null);
-  const backendUrl = 'https://vsnode.paclabs.com';
+  const backendUrl = 'http://localhost:5000';
 
   useEffect(() => {
-    if (key && PROBLEMS_DATA[key]) {
-      const savedTime = localStorage.getItem(`timeLeft-${key}`);
-      if (savedTime) {
-        setTimeLeft(parseInt(savedTime));
+    const fetchProblem = async () => {
+      const problem = await fetch(`${backendUrl}/api/challenges/userChallenge/${key}`);
+      const data = await problem.json();
+      const parsedData = data.data;
+      setCurrentProblem(parsedData);
+      setChallengeType(parsedData.type);
+      localStorage.setItem('userId', key);
+      if (localStorage.getItem(`timeLeft-${key}`)) {
+        setTimeLeft(parseInt(localStorage.getItem(`timeLeft-${key}`)));
       } else {
-        const timeInMinutes = parseInt(PROBLEMS_DATA[key].time);
-        setTimeLeft(timeInMinutes * 60); // Convert to seconds
+        setTimeLeft(parseInt(parsedData.time * 60));
       }
-    }
+    };
+    fetchProblem();
   }, [key]);
 
   useEffect(() => {
     if (timeLeft === null) return;
 
-    // Save time to localStorage whenever it changes
     if (timeLeft > 0) {
       localStorage.setItem(`timeLeft-${key}`, timeLeft.toString());
     }
@@ -67,7 +69,7 @@ export default function VSEditor() {
       setTimeLeft(prevTime => {
         if (prevTime <= 0) {
           clearInterval(timer);
-          localStorage.removeItem(`timeLeft-${key}`); // Clear the time when it reaches 0
+          localStorage.removeItem(`timeLeft-${key}`);
           handleFinishChallenge();
           return 0;
         }
@@ -95,19 +97,17 @@ export default function VSEditor() {
   };
 
   useEffect(() => {
+    if (!currentProblem) return;
     const initializeWorkspace = async () => {
       try {
-        // Generate or get a unique user ID (you might use auth system in production)
-        const projectTemplate = PROBLEMS_DATA[key].guthubLink;
-        const userId = localStorage.getItem('userId') || `temp-${Date.now()}`;
-        localStorage.setItem('userId', userId);
+        const projectTemplate = currentProblem.githubLink;
         
         const response = await fetch(`${backendUrl}/api/init-workspace`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ userId, projectTemplate }),
+          body: JSON.stringify({ userId: key, projectTemplate }),
         });
         
         const data = await response.json();
@@ -122,13 +122,13 @@ export default function VSEditor() {
     };
 
     initializeWorkspace();
-  }, [key, vscodeUrl]);
+  }, [key, vscodeUrl, currentProblem]);
 
   useEffect(() => {
     const setupTestsEnvironment = async () => {
       try {
         console.log('Setting up tests environment...');
-        const userId = localStorage.getItem('userId');
+        const userId = key;
         const response = await fetch(`${backendUrl}/api/build-docker-image/${userId}`, {
           method: 'GET',
           headers: {
@@ -150,44 +150,67 @@ export default function VSEditor() {
     }
   }, [key, isProjectDirectorySet]);
 
-  useEffect(() => {
-    const fetchProjectFiles = async () => {
-      try {
-        const userId = localStorage.getItem('userId');
-        const response = await fetch(`${backendUrl}/api/project-files/${userId}`);
-        const data = await response.json();
-        
-        if (data.error) {
-          setError(data.error);
-          return;
-        }
+  const fetchProjectFiles = async () => {
+    try {
+      const userId = key;
+      const response = await fetch(`${backendUrl}/api/project-files/${userId}`);
+      const data = await response.json();
       
-        setUserCode(data.files);
-        localStorage.setItem(`userCode-${key}`, JSON.stringify(data.files));
-        setError(null);
-      } catch (err) {
-        setError('Failed to fetch project files');
-        console.error('Error fetching files:', err);
+      if (data.error) {
+        setError(data.error);
+        return;
       }
-    };
+    
+      setUserCode(data.files);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch project files');
+      console.error('Error fetching files:', err);
+    }
+  };
 
-    if(PROBLEMS_DATA[key].type === 'frontend'){
-      fetchProjectFiles();
+  useEffect(() => {
+    if (!currentProblem) return;
+
+    fetchProjectFiles();
+    if(currentProblem && currentProblem.type === 'frontend'){
       const pollInterval = setInterval(fetchProjectFiles, 5000);
       return () => clearInterval(pollInterval);
     }
   }, [key]);
 
+  // Store User Code every 2 minutes
   useEffect(() => {
-    setCurrentProblem(PROBLEMS_DATA[key]);
-    setChallengeType(PROBLEMS_DATA[key].type);
-    localStorage.setItem(`problemData-${key}`, JSON.stringify(PROBLEMS_DATA[key]));
-  }, [key]);
+    const storeUserCode = async () => {
+      try {
+        const userId = key;
+        const response = await fetch(`${backendUrl}/api/store-user-code/${userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: userCode, userChallengeId: key }),
+        });
+        const data = await response.json();
+        if (data.error) {
+          setError(data.error);
+          return;
+        }
+        console.log('User code stored successfully');
+      } catch (err) {
+        setError('Failed to store user code');
+        console.error('Error storing user code:', err);
+      }
+    };
+
+    const interval = setInterval(storeUserCode, 120000);
+    return () => clearInterval(interval);
+  }, [key, userCode]);
 
   const runTestcases = async () => {
     console.log('Running testcases...');
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = key;
       const response = await fetch(`${backendUrl}/api/run-tests/${userId}`, {
         method: 'GET',
         headers: {
@@ -213,12 +236,35 @@ export default function VSEditor() {
     setIsSubmit(false);
   };
 
+  // store Chat History
+  const storeChatHistory = async () => {
+    try {
+      const userId = key;
+      const response = await fetch(`${backendUrl}/api/store-user-chat-history/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userChallengeId: key, messages: localStorage.getItem(`chatHistory${key}`) }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
+      console.log('Chat history stored successfully');
+    } catch (err) {
+      setError('Failed to store chat history');
+      console.error('Error storing chat history:', err);
+    }
+  };
+
   const handleSubmit = async () => {
     setIsLoading(true);
     if (!isSubmit) {
+      await fetchProjectFiles();
       await runTestcases();
-      const challengeData = JSON.parse(localStorage.getItem(`problemData-${key}`));
-      const resultData = await GenerateReview(challengeData, userCode);
+      const resultData = await GenerateReview(currentProblem, userCode);
       setReviewPoints(resultData);
     }
     setIsSubmit(!isSubmit);
@@ -231,14 +277,29 @@ export default function VSEditor() {
 
   const handleShowProblem = (toggle) => {
     setShowProblem(toggle);
-    const newProblemData = PROBLEMS_DATA[key];
-    setCurrentProblem(newProblemData);
   };
 
-  const destroyWorkspace = async () => {
-    console.log('Destroying workspace...');
-    const userId = localStorage.getItem('userId');
-    const response = await fetch(`${backendUrl}/api/destroy-workspace/${userId}`, {
+  // const destroyWorkspace = async () => {
+  //   console.log('Destroying workspace...');
+  //   const userId = key;
+  //   const response = await fetch(`${backendUrl}/api/destroy-workspace/${userId}`, {
+  //     method: 'GET',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //   });
+  //   const data = await response.json();
+  //   if (data.error) {
+  //     setError(data.error);
+  //     return;
+  //   }
+  //   console.log('Workspace destroyed');
+  // };
+
+  const finishChallenge = async () => {
+    console.log('Finishing challenge...');
+    const userId = key;
+    const response = await fetch(`${backendUrl}/api/finish/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -249,30 +310,16 @@ export default function VSEditor() {
       setError(data.error);
       return;
     }
-    console.log('Workspace destroyed');
+    console.log('Challenge finished');
   };
 
   const handleFinishChallenge = async () => {
+    if (!currentProblem) return;
     setLoading(true);
-    const summaryResult = await GenerateSummary(
-      currentProblem,
-      userCode,
-      PROBLEMS_DATA[key],
-      JSON.parse(localStorage.getItem(`chatHistory${key}`)) || []
-    );
-    await runTestcases();
-    const resultData = testResults;
-    
-    if(summaryResult && resultData){
-      localStorage.setItem(`testSummary${key}`, JSON.stringify(summaryResult));
-      localStorage.setItem(`testcaseData${key}`, JSON.stringify(resultData));
-    } else if(summaryResult && !resultData) {
-      localStorage.setItem(`testSummary${key}`, JSON.stringify(summaryResult));
-    } else {
-      alert('Error Generating your result Summary. Please Try Again.')
-    }
-    await destroyWorkspace();
-    navigate(`/summary/${key}`); 
+    await storeChatHistory();
+    // await destroyWorkspace();
+    await finishChallenge();
+    navigate(`/`); 
     setLoading(false);
   };
 

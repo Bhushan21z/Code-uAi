@@ -1,5 +1,7 @@
 import React from "react";
 import { Box, Tabs, Tab } from "@mui/material";
+import AdminProblems from "../components/AdminProblems";
+import UserChallenges from "../components/UserChallenges";
 
 const AdminDashboard = () => {
   const [tabIndex, setTabIndex] = React.useState(0);
@@ -9,16 +11,15 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", p: 3 }}>
+    <Box sx={{ width: '100%' }}>
       <Tabs value={tabIndex} onChange={handleChange} centered>
         <Tab label="Problems" />
-        <Tab label="Create Custom Assessment" />
-        <Tab label="Dashboard (Coming Soon)" />
+        <Tab label="User Challenges" />
       </Tabs>
-
-      <Box sx={{ mt: 3 }}>
-        {tabIndex === 0 && <>Problems</>}
-        {tabIndex === 1 && <>Create Custom Assessment</>}
+      
+      <Box sx={{ p: 3 }}>
+        {tabIndex === 0 && <AdminProblems />}
+        {tabIndex === 1 && <UserChallenges />}
       </Box>
     </Box>
   );
