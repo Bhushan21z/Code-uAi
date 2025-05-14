@@ -109,15 +109,38 @@ export default function ChallengesList() {
                       variant="contained"
                       fullWidth
                       sx={{
-                        backgroundColor: "#ff8a00",
+                        backgroundColor:
+                          challenge.status === "in-progress"
+                            ? "#ff8a00"
+                            : challenge.status === "result-generated"
+                            ? "#4caf50"
+                            : "#9e9e9e",
                         borderRadius: "30px",
                         fontSize: "16px",
                         fontWeight: "bold",
-                        "&:hover": { backgroundColor: "#e52e71" },
+                        "&:hover": {
+                          backgroundColor:
+                            challenge.status === "in-progress"
+                              ? "#e52e71"
+                              : challenge.status === "result-generated"
+                              ? "#388e3c"
+                              : "#9e9e9e",
+                        },
                       }}
-                      onClick={() => navigate(`/editor/${challenge.userChallengeId}`)}
+                      onClick={() => {
+                        if (challenge.status === "in-progress") {
+                          navigate(`/editor/${challenge.userChallengeId}`);
+                        } else if (challenge.status === "result-generated") {
+                          navigate(`/summary/${challenge.userChallengeId}`);
+                        }
+                      }}
+                      disabled={challenge.status === "completed"}
                     >
-                      Load Challenge
+                      {challenge.status === "in-progress"
+                        ? "Load Challenge"
+                        : challenge.status === "result-generated"
+                        ? "Show Result"
+                        : "Completed"}
                     </Button>
                   </CardContent>
                 </Card>

@@ -177,35 +177,37 @@ export default function VSEditor() {
       const pollInterval = setInterval(fetchProjectFiles, 5000);
       return () => clearInterval(pollInterval);
     }
-  }, [key]);
+  }, [key, isProjectDirectorySet]);
 
-  // Store User Code every 2 minutes
-  useEffect(() => {
-    const storeUserCode = async () => {
-      try {
-        const userId = key;
-        const response = await fetch(`${backendUrl}/api/store-user-code/${userId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ code: userCode, userChallengeId: key }),
-        });
-        const data = await response.json();
-        if (data.error) {
-          setError(data.error);
-          return;
-        }
-        console.log('User code stored successfully');
-      } catch (err) {
-        setError('Failed to store user code');
-        console.error('Error storing user code:', err);
+  const storeUserCode = async () => {
+    await fetchProjectFiles();
+    try {
+      const userId = key;
+      const response = await fetch(`${backendUrl}/api/store-user-code/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: userCode, userChallengeId: key }),
+      });
+      const data = await response.json();
+      console.log(data);
+      if (data.error) {
+        setError(data.error);
+        return;
       }
-    };
+      console.log('User code stored successfully');
+    } catch (err) {
+      setError('Failed to store user code');
+      console.error('Error storing user code:', err);
+    }
+  };
 
-    const interval = setInterval(storeUserCode, 120000);
+  // Store User Code every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(storeUserCode, 600000);
     return () => clearInterval(interval);
-  }, [key, userCode]);
+  }, [key, isProjectDirectorySet]);
 
   const runTestcases = async () => {
     console.log('Running testcases...');
@@ -279,33 +281,35 @@ export default function VSEditor() {
     setShowProblem(toggle);
   };
 
-  // const destroyWorkspace = async () => {
-  //   console.log('Destroying workspace...');
-  //   const userId = key;
-  //   const response = await fetch(`${backendUrl}/api/destroy-workspace/${userId}`, {
-  //     method: 'GET',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //   });
-  //   const data = await response.json();
-  //   if (data.error) {
-  //     setError(data.error);
-  //     return;
-  //   }
-  //   console.log('Workspace destroyed');
-  // };
-
-  const finishChallenge = async () => {
-    console.log('Finishing challenge...');
+  const destroyWorkspace = async () => {
+    console.log('Destroying workspace...');
     const userId = key;
-    const response = await fetch(`${backendUrl}/api/finish/${userId}`, {
+    const response = await fetch(`${backendUrl}/api/destroy-workspace/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
     const data = await response.json();
+    console.log(data);
+    if (data.error) {
+      setError(data.error);
+      return;
+    }
+    console.log('Workspace destroyed');
+  };
+
+  const finishChallenge = async () => {
+    console.log('Finishing challenge...');
+    const userId = key;
+    const response = await fetch(`${backendUrl}/api/userChallenges/finish/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    console.log(data);
     if (data.error) {
       setError(data.error);
       return;
@@ -317,7 +321,8 @@ export default function VSEditor() {
     if (!currentProblem) return;
     setLoading(true);
     await storeChatHistory();
-    // await destroyWorkspace();
+    await storeUserCode();
+    await destroyWorkspace();
     await finishChallenge();
     navigate(`/`); 
     setLoading(false);

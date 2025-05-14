@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { CheckCircle, AlertCircle, Award, Zap, ArrowUp, Book, Code, Terminal } from 'lucide-react';
@@ -7,6 +7,7 @@ import './dashboard.css';
 
 export default function AssessmentDashboard() {
   const { key } = useParams();
+  const [dashboardData, setDashboardData] = useState(mockDashboardData);
   const mockTestcaseData = {
     "success": true,
     "summary": [
@@ -22,9 +23,35 @@ export default function AssessmentDashboard() {
       "time": "3.041 s"
     }
   };
+  const [testcaseData, setTestcaseData] = useState(mockTestcaseData);
 
-  const dashboardData = JSON.parse(localStorage.getItem(`testSummary${key}`)) || mockDashboardData;
-  const testcaseData = JSON.parse(localStorage.getItem(`testcaseData${key}`)) || mockTestcaseData;
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      console.log("Fetching dashboard data for key:", key);
+      try {
+        const response = await fetch(`http://localhost:5000/api/userChallenges/summary/${key}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log("Response status:", response);
+        if (!response.ok) {
+          console.error('Network response was not ok:', response.statusText);
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        console.log("Fetched dashboard data:", data);
+        setDashboardData(data.challengeResult);
+        setTestcaseData(data.testcaseResult);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setDashboardData(mockDashboardData); // Fallback to mock data
+        setTestcaseData(mockTestcaseData); // Fallback to mock data
+      }
+    };
+    fetchDashboardData();
+  }, [key]);
 
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -127,8 +154,8 @@ export default function AssessmentDashboard() {
             <PieChart width={130} height={130}>
               <Pie
                 data={[
-                  { name: 'Passed', value: testcaseData.stats.passedTests },
-                  { name: 'Failed', value: testcaseData.stats.totalTests - testcaseData.stats.passedTests }
+                  { name: 'Passed', value: testcaseData?.stats.passedTests },
+                  { name: 'Failed', value: testcaseData?.stats.totalTests - testcaseData?.stats.passedTests }
                 ]}
                 cx={65}
                 cy={65}
@@ -153,13 +180,13 @@ export default function AssessmentDashboard() {
           <StatItem 
             icon={CheckCircle} 
             label="Test Suites" 
-            value={`${testcaseData.stats.passedSuites}/${testcaseData.stats.totalSuites} passed`} 
+            value={`${testcaseData?.stats.passedSuites}/${testcaseData?.stats.totalSuites} passed`} 
             color="text-green-500" 
           />
           <StatItem 
             icon={Zap} 
             label="Total Time" 
-            value={testcaseData.stats.time} 
+            value={testcaseData?.stats.time} 
             color="text-amber-500" 
           />
         </div>

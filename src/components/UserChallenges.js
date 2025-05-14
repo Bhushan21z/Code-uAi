@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -43,6 +44,7 @@ const UserChallenges = () => {
   });
   const [openSummaryDialog, setOpenSummaryDialog] = useState(false);
   const [selectedSummary, setSelectedSummary] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserChallenges();
@@ -165,51 +167,26 @@ const UserChallenges = () => {
     }
   };
 
-  const handleGenerateSummary = async (userEmail, challengeId) => {
+  const handleGenerateSummary = async (userChallengeId) => {
     try {
       // Call your API to generate summary
-      const response = await fetch('http://localhost:5000/api/userChallenges/generate-summary', {
-        method: 'POST',
+      const response = await fetch(`http://localhost:5000/api/userChallenges/generate-result/${userChallengeId}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: userEmail,
-          challengeId
-        }),
       });
 
       if (response.ok) {
         const data = await response.json();
         showSnackbar("Summary generated successfully", "success");
         fetchUserChallenges();
-        // You might want to show the summary immediately
-        setSelectedSummary(data.summary);
-        setOpenSummaryDialog(true);
       } else {
         const errorData = await response.json();
         showSnackbar(errorData.error || "Failed to generate summary", "error");
       }
     } catch (error) {
       showSnackbar("An error occurred while generating summary", "error");
-    }
-  };
-
-  const handleViewSummary = async (userEmail, challengeId) => {
-    try {
-      // Call your API to get summary
-      const response = await fetch(`http://localhost:5000/api/userChallenges/summary?email=${userEmail}&challengeId=${challengeId}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedSummary(data.summary);
-        setOpenSummaryDialog(true);
-      } else {
-        const errorData = await response.json();
-        showSnackbar(errorData.error || "Failed to fetch summary", "error");
-      }
-    } catch (error) {
-      showSnackbar("An error occurred while fetching summary", "error");
     }
   };
 
@@ -301,7 +278,7 @@ const UserChallenges = () => {
                             <Button
                               variant="outlined"
                               startIcon={<Summarize />}
-                              onClick={() => handleGenerateSummary(uc.email, uc.challengeId)}
+                              onClick={() => handleGenerateSummary(uc.userChallengeId)}
                               size="small"
                               sx={{ textTransform: 'none' }}
                             >
@@ -312,7 +289,7 @@ const UserChallenges = () => {
                             <Button
                               variant="outlined"
                               startIcon={<Visibility />}
-                              onClick={() => handleViewSummary(uc.email, uc.challengeId)}
+                              onClick={() => navigate(`/summary/${uc.userChallengeId}`)}
                               size="small"
                               sx={{ textTransform: 'none' }}
                             >
