@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Card, Grid, CardMedia, CardContent, Typography, Chip, Button, Tabs, Tab } from "@mui/material";
 import { motion } from "framer-motion";
+import { backendUrl } from '../Constants/constants';
 
 export default function ChallengesList() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function ChallengesList() {
   const fetchChallenges = async () => {
     try {
       const userEmail = JSON.parse(localStorage.getItem('user')).email;
-      const response = await fetch('http://localhost:5000/api/userChallenges/user', {
+      const response = await fetch(`${backendUrl}/api/userChallenges/user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +111,7 @@ export default function ChallengesList() {
                       fullWidth
                       sx={{
                         backgroundColor:
-                          challenge.status === "in-progress"
+                          challenge.status === "in-progress" || challenge.status === "pending"
                             ? "#ff8a00"
                             : challenge.status === "result-generated"
                             ? "#4caf50"
@@ -120,7 +121,7 @@ export default function ChallengesList() {
                         fontWeight: "bold",
                         "&:hover": {
                           backgroundColor:
-                            challenge.status === "in-progress"
+                            challenge.status === "in-progress" || challenge.status === "pending"
                               ? "#e52e71"
                               : challenge.status === "result-generated"
                               ? "#388e3c"
@@ -128,7 +129,7 @@ export default function ChallengesList() {
                         },
                       }}
                       onClick={() => {
-                        if (challenge.status === "in-progress") {
+                        if (challenge.status === "in-progress" || challenge.status === "pending") {
                           navigate(`/editor/${challenge.userChallengeId}`);
                         } else if (challenge.status === "result-generated") {
                           navigate(`/summary/${challenge.userChallengeId}`);
@@ -136,7 +137,7 @@ export default function ChallengesList() {
                       }}
                       disabled={challenge.status === "completed"}
                     >
-                      {challenge.status === "in-progress"
+                      {challenge.status === "in-progress" || challenge.status === "pending"
                         ? "Load Challenge"
                         : challenge.status === "result-generated"
                         ? "Show Result"

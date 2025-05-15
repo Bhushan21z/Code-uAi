@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   SandpackProvider, 
   SandpackLayout, 
@@ -16,13 +15,13 @@ import GenerateReview from '../components/GenerateReview';
 import { Circles } from 'react-loader-spinner';
 import RequestTester from '../components/RequestTester';
 import { usePageLoader } from "../contexts/PageLoaderContext";
-import './editor.css';
+import { backendUrl } from '../Constants/constants';
+import '../styles/editor.css';
 
 export default function VSEditor() {
   const { key } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState('react');
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const [isProjectDirectorySet, setIsProjectDirectorySet] = useState(false);
   const [isSubmit, setIsSubmit] = useState(false);
@@ -31,15 +30,14 @@ export default function VSEditor() {
   const [userCode, setUserCode] = useState({});
   const [currentProblem, setCurrentProblem] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { setLoading } = usePageLoader();
   const [error, setError] = useState(null);
+  const { setLoading } = usePageLoader();
   const [isTestsSet, setIsTestsSet] = useState(false);
   const [testResults, setTestResults] = useState(null);
   const [reviewPoints, setReviewPoints] = useState([]);
   const [vscodeUrl, setVscodeUrl] = useState('');
   const [challengeType, setChallengeType] = useState('');
   const [timeLeft, setTimeLeft] = useState(null);
-  const backendUrl = 'http://localhost:5000';
 
   useEffect(() => {
     const fetchProblem = async () => {
@@ -113,7 +111,6 @@ export default function VSEditor() {
         const data = await response.json();
         if (data.success) {
           setVscodeUrl(data.vscodeUrl);
-          console.log('Workspace initialized');
           setIsProjectDirectorySet(true);
         }
       } catch (error) {
@@ -127,7 +124,6 @@ export default function VSEditor() {
   useEffect(() => {
     const setupTestsEnvironment = async () => {
       try {
-        console.log('Setting up tests environment...');
         const userId = key;
         const response = await fetch(`${backendUrl}/api/build-docker-image/${userId}`, {
           method: 'GET',
@@ -138,7 +134,6 @@ export default function VSEditor() {
         const data = await response.json();
         if (data.success) {
           setIsTestsSet(true);
-          console.log('Tests environment setup:');
         }
       } catch (error) {
         console.error('Failed to setup tests environment:', error);
@@ -191,12 +186,10 @@ export default function VSEditor() {
         body: JSON.stringify({ code: userCode, userChallengeId: key }),
       });
       const data = await response.json();
-      console.log(data);
       if (data.error) {
         setError(data.error);
         return;
       }
-      console.log('User code stored successfully');
     } catch (err) {
       setError('Failed to store user code');
       console.error('Error storing user code:', err);
@@ -205,12 +198,12 @@ export default function VSEditor() {
 
   // Store User Code every 5 minutes
   useEffect(() => {
+    storeUserCode();
     const interval = setInterval(storeUserCode, 600000);
     return () => clearInterval(interval);
   }, [key, isProjectDirectorySet]);
 
   const runTestcases = async () => {
-    console.log('Running testcases...');
     try {
       const userId = key;
       const response = await fetch(`${backendUrl}/api/run-tests/${userId}`, {
@@ -220,12 +213,10 @@ export default function VSEditor() {
         },
       });
       const data = await response.json();
-      console.log(data);
       if (data.error) {
         setError(data.error);
         return;
       }
-      console.log('Test Results:');
       setTestResults(data);
       setError(null);
     } catch (err) {
@@ -254,7 +245,6 @@ export default function VSEditor() {
         setError(data.error);
         return;
       }
-      console.log('Chat history stored successfully');
     } catch (err) {
       setError('Failed to store chat history');
       console.error('Error storing chat history:', err);
@@ -282,7 +272,6 @@ export default function VSEditor() {
   };
 
   const destroyWorkspace = async () => {
-    console.log('Destroying workspace...');
     const userId = key;
     const response = await fetch(`${backendUrl}/api/destroy-workspace/${userId}`, {
       method: 'GET',
@@ -291,16 +280,13 @@ export default function VSEditor() {
       },
     });
     const data = await response.json();
-    console.log(data);
     if (data.error) {
       setError(data.error);
       return;
     }
-    console.log('Workspace destroyed');
   };
 
   const finishChallenge = async () => {
-    console.log('Finishing challenge...');
     const userId = key;
     const response = await fetch(`${backendUrl}/api/userChallenges/finish/${userId}`, {
       method: 'GET',
@@ -309,12 +295,10 @@ export default function VSEditor() {
       },
     });
     const data = await response.json();
-    console.log(data);
     if (data.error) {
       setError(data.error);
       return;
     }
-    console.log('Challenge finished');
   };
 
   const handleFinishChallenge = async () => {
@@ -322,6 +306,7 @@ export default function VSEditor() {
     setLoading(true);
     await storeChatHistory();
     await storeUserCode();
+    await runTestcases();
     await destroyWorkspace();
     await finishChallenge();
     navigate(`/`); 

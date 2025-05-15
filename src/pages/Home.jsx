@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { backendUrl } from '../Constants/constants';
+import { googleClientId } from '../Constants/constants';
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 // Note: You'll need to install these dependencies or replace with your own icons
@@ -15,10 +17,8 @@ const Brain = () => <span>🧠</span>;
 const Camera = () => <span>📷</span>;
 
 export default function HomePage() {
-  const googleClientId = "798578132639-o2jejbp39242as0m4v8mfvdhhm4irru7.apps.googleusercontent.com"; 
   const navigate = useNavigate();
   const [hoveredButton, setHoveredButton] = useState(null);
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
   
   // Admin login modal state
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -31,8 +31,6 @@ export default function HomePage() {
   
   const handleDeveloperClick = () => {
     // This will be handled by Google Sign-in
-    console.log("Developer sign-in clicked");
-    // You can trigger the Google login button click if needed
     const googleSignInButton = document.querySelector('.google-login-container button');
     if (googleSignInButton) {
       googleSignInButton.click();
@@ -63,7 +61,6 @@ export default function HomePage() {
       });
       
       const userResJson = await userRes.json();
-      console.log(userResJson);
       
       if (userResJson.success || userResJson.existing) {
         // 2. Login
@@ -73,9 +70,7 @@ export default function HomePage() {
           body: JSON.stringify({ type: 'login', email, password })
         });
         
-        console.log(email, password);
         const loginResJson = await loginRes.json();
-        console.log(loginResJson);
         if (!loginResJson.success) throw new Error('Login failed');
         
         // Store user information in localStorage or session for future reference

@@ -27,6 +27,7 @@ import {
   MenuItem,
   Select
 } from "@mui/material";
+import { backendUrl } from '../Constants/constants';
 import { Add, Close, Delete, Visibility, Summarize } from "@mui/icons-material";
 
 const UserChallenges = () => {
@@ -55,7 +56,7 @@ const UserChallenges = () => {
   const fetchUserChallenges = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/userChallenges/all');
+      const response = await fetch(`${backendUrl}/api/userChallenges/all`);
       const data = await response.json();
       setUserChallenges(data.data);
     } catch (error) {
@@ -67,7 +68,7 @@ const UserChallenges = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/users');
+      const response = await fetch(`${backendUrl}/api/users`);
       const data = await response.json();
       setUsers(data.data);
     } catch (error) {
@@ -77,7 +78,7 @@ const UserChallenges = () => {
 
   const fetchChallenges = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/challenges');
+      const response = await fetch(`${backendUrl}/api/challenges`);
       const data = await response.json();
       setChallenges(data.data);
     } catch (error) {
@@ -92,7 +93,7 @@ const UserChallenges = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/userChallenges', {
+      const response = await fetch(`${backendUrl}/api/userChallenges`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +122,7 @@ const UserChallenges = () => {
 
   const handleDeleteUserChallenge = async (userEmail, challengeId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/userChallenges/all`, {
+      const response = await fetch(`${backendUrl}/api/userChallenges/all`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +144,7 @@ const UserChallenges = () => {
 
   const handleStatusChange = async (userEmail, challengeId, newStatus) => {
     try {
-      const response = await fetch('http://localhost:5000/api/userChallenges/status', {
+      const response = await fetch(`${backendUrl}/api/userChallenges/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -170,7 +171,7 @@ const UserChallenges = () => {
   const handleGenerateSummary = async (userChallengeId) => {
     try {
       // Call your API to generate summary
-      const response = await fetch(`http://localhost:5000/api/userChallenges/generate-result/${userChallengeId}`, {
+      const response = await fetch(`${backendUrl}/api/userChallenges/generate-result/${userChallengeId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
