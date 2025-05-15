@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { backendUrl } from '../Constants/constants';
+import { googleClientId } from '../Constants/constants';
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 // Note: You'll need to install these dependencies or replace with your own icons
@@ -15,35 +17,119 @@ const Brain = () => <span>🧠</span>;
 const Camera = () => <span>📷</span>;
 
 export default function HomePage() {
-  const googleClientId = "798578132639-o2jejbp39242as0m4v8mfvdhhm4irru7.apps.googleusercontent.com"; 
   const navigate = useNavigate();
   const [hoveredButton, setHoveredButton] = useState(null);
-  const [showFeatures, setShowFeatures] = useState(false);
-
+  
+  // Admin login modal state
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminFormData, setAdminFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [adminError, setAdminError] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
+  
   const handleDeveloperClick = () => {
     // This will be handled by Google Sign-in
-    console.log("Developer sign-in clicked");
+    const googleSignInButton = document.querySelector('.google-login-container button');
+    if (googleSignInButton) {
+      googleSignInButton.click();
+    }
   };
 
   const handleCompanyClick = () => {
-    // In a real implementation, this would navigate to admin page
-    navigate("/admin");
+    // Show admin login modal
+    setShowAdminModal(true);
+    setAdminError('');
   };
 
-  const onSuccessGoogle = (credentialResponse) => {
-    const idToken = credentialResponse.credential;
-
-    if (idToken) {
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    try {
+      // Extract user info from Google response
+      const idToken = credentialResponse.credential;
       const decodedToken = JSON.parse(atob(idToken.split('.')[1]));
-      // Handle successful login
-      navigate("/challenges");
-    } else {
-      console.error("ID token not found in credential response.");
+      const email = decodedToken.email;
+      const name = decodedToken.name;
+      const password = email; // As per your requirement
+      const role = 'candidate';
+
+      // 1. Create user
+      const userRes = await fetch(`${backendUrl}/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name, role })
+      });
+      
+      const userResJson = await userRes.json();
+      
+      if (userResJson.success || userResJson.existing) {
+        // 2. Login
+        const loginRes = await fetch(`${backendUrl}/api/auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'login', email, password })
+        });
+        
+        const loginResJson = await loginRes.json();
+        if (!loginResJson.success) throw new Error('Login failed');
+        
+        // Store user information in localStorage or session for future reference
+        localStorage.setItem('user', JSON.stringify(loginResJson.user));
+        
+        navigate('/challenges');
+      } else {
+        throw new Error(userResJson.error || 'User creation failed');
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      alert(err.message || 'Login failed. Please try again.');
     }
   };
 
   const onErrorGoogle = () => {
     console.error("Google Sign-In Failed");
+    alert("Google sign-in failed. Please try again later.");
+  };
+
+  // Admin form handlers
+  const handleAdminInputChange = (e) => {
+    const { name, value } = e.target;
+    setAdminFormData(prev => ({...prev, [name]: value}));
+  };
+
+  const handleAdminSubmit = async (e) => {
+    e.preventDefault();
+    setAdminError('');
+    setAdminLoading(true);
+    
+    try {
+      const { email, password } = adminFormData;
+      
+      // Login existing admin
+      const loginRes = await fetch(`${backendUrl}/api/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'login', email, password })
+      });
+      
+      const loginData = await loginRes.json();
+      
+      if (!loginData.success) {
+        throw new Error(loginData.error || 'Invalid credentials');
+      }
+      
+      // Store user info
+      localStorage.setItem('user', JSON.stringify(loginData.user));
+      
+      // Close modal and navigate to admin page
+      setShowAdminModal(false);
+      navigate('/admin');
+    } catch (err) {
+      console.error("Admin login error:", err);
+      setAdminError(err.message || 'Login failed');
+    } finally {
+      setAdminLoading(false);
+    }
   };
 
   const features = [
@@ -149,15 +235,6 @@ export default function HomePage() {
       color: "#d1d1e0",
       maxWidth: "700px",
     },
-    featuresToggle: {
-      color: "#fcd34d",
-      textDecoration: "underline",
-      background: "none",
-      border: "none",
-      cursor: "pointer",
-      padding: "8px 0",
-      marginTop: "8px",
-    },
     featuresGrid: {
       display: "grid",
       gridTemplateColumns: window.innerWidth < 768 ? "1fr" : 
@@ -193,6 +270,81 @@ export default function HomePage() {
       fontSize: "0.875rem",
       marginTop: "64px",
     },
+    // Admin modal styles
+    modalOverlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000
+    },
+    modalContent: {
+      backgroundColor: "#1f1f3d",
+      borderRadius: "12px",
+      padding: "32px",
+      width: "90%",
+      maxWidth: "400px",
+      position: "relative",
+      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.5)"
+    },
+    modalClose: {
+      position: "absolute",
+      top: "15px",
+      right: "20px",
+      fontSize: "24px",
+      color: "#6b7280",
+      cursor: "pointer",
+      background: "none",
+      border: "none"
+    },
+    modalTitle: {
+      fontSize: "1.5rem",
+      fontWeight: "600",
+      color: "white",
+      marginBottom: "20px",
+      textAlign: "center"
+    },
+    formGroup: {
+      marginBottom: "16px"
+    },
+    formLabel: {
+      display: "block",
+      color: "#d1d1e0",
+      marginBottom: "6px",
+      fontSize: "0.875rem"
+    },
+    formInput: {
+      width: "100%",
+      padding: "10px 12px",
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
+      border: "1px solid rgba(255, 255, 255, 0.2)",
+      borderRadius: "6px",
+      color: "white",
+      fontSize: "1rem"
+    },
+    formButton: {
+      width: "100%",
+      padding: "12px",
+      backgroundColor: "#8b5cf6",
+      borderRadius: "6px",
+      color: "white",
+      fontWeight: "500",
+      border: "none",
+      cursor: "pointer",
+      marginTop: "10px",
+      fontSize: "1rem"
+    },
+    errorMessage: {
+      color: "#f87171",
+      fontSize: "0.875rem",
+      marginTop: "10px",
+      textAlign: "center"
+    }
   };
 
   return (
@@ -247,11 +399,14 @@ export default function HomePage() {
             </div>
             
             {/* Developer button click will show the Google Sign-in */}
-            <div style={{ marginTop: "20px" }}>
+            <div style={{ marginTop: "20px" }} className="google-login-container">
               <GoogleLogin 
-                onSuccess={onSuccessGoogle} 
+                onSuccess={handleGoogleLoginSuccess} 
                 onError={onErrorGoogle}
                 width="250"
+                useOneTap
+                text="signin_with"
+                shape="rectangular"
               />
             </div>
             
@@ -275,10 +430,62 @@ export default function HomePage() {
           
           {/* Footer */}
           <div style={styles.footer}>
-            <p>© {new Date().getFullYear()} Code-uAi - The future of technical assessment</p>
+            <p> {new Date().getFullYear()} Code-uAi - The future of technical assessment</p>
           </div>
         </div>
       </div>
+      
+      {/* Admin Login Modal */}
+      {showAdminModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <button 
+              style={styles.modalClose} 
+              onClick={() => setShowAdminModal(false)}
+            >
+              ×
+            </button>
+            
+            <h3 style={styles.modalTitle}>Admin Login</h3>
+            
+            {adminError && <p style={styles.errorMessage}>{adminError}</p>}
+            
+            <form onSubmit={handleAdminSubmit}>
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={adminFormData.email}
+                  onChange={handleAdminInputChange}
+                  style={styles.formInput}
+                  required
+                />
+              </div>
+              
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={adminFormData.password}
+                  onChange={handleAdminInputChange}
+                  style={styles.formInput}
+                  required
+                />
+              </div>
+              
+              <button 
+                type="submit" 
+                style={styles.formButton}
+                disabled={adminLoading}
+              >
+                {adminLoading ? 'Logging in...' : 'Login as Admin'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </GoogleOAuthProvider>
   );
 }

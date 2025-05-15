@@ -1,0 +1,15 @@
+{
+    "success": true,
+    "summary": [
+      "PASS src/tests/TodoInput.test.js",
+      "PASS src/tests/TodoList.test.js"
+    ],
+    "stats": {
+      "passedSuites": 2,
+      "totalSuites": 2,
+      "passedTests": 6,
+      "totalTests": 6,
+      "snapshots": 0,
+      "time": "3.041 s"
+    }
+  }

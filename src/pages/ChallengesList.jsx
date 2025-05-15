@@ -1,19 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Card, Grid, CardMedia, CardContent, Typography, Chip, Button, Tabs, Tab } from "@mui/material";
 import { motion } from "framer-motion";
-import challengesData from "../Constants/challenges.json";
-import backendChallengesData from "../Constants/backendChallenges.json";
+import { backendUrl } from '../Constants/constants';
 
 export default function ChallengesList() {
   const navigate = useNavigate();
-  const [tabIndex, setTabIndex] = useState(0);
+  const [challenges, setChallenges] = useState([]);
 
-  const handleChange = (event, newIndex) => {
-    setTabIndex(newIndex);
+  useEffect(() => {
+    fetchChallenges();
+  }, []);
+
+  const fetchChallenges = async () => {
+    try {
+      const userEmail = JSON.parse(localStorage.getItem('user')).email;
+      const response = await fetch(`${backendUrl}/api/userChallenges/user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: userEmail }),
+      });
+      const data = await response.json();
+      setChallenges(data.data);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+    }
   };
-
-  const selectedChallenges = tabIndex === 0 ? challengesData : backendChallengesData;
 
   return (
     <Box
@@ -40,24 +54,10 @@ export default function ChallengesList() {
           Available Challenges
         </Typography>
 
-        <Tabs
-          value={tabIndex}
-          onChange={handleChange}
-          centered
-          textColor="inherit"
-          indicatorColor="secondary"
-          sx={{ mb: 4 }}
-        >
-          <Tab label="Frontend" />
-          <Tab label="Backend" />
-        </Tabs>
-
         <Grid container spacing={4} justifyContent="center">
-          {Object.keys(selectedChallenges).map((key) => {
-            const challenge = selectedChallenges[key];
-            
+          {challenges.map((challenge) => {
             return (
-              <Grid item xs={12} sm={6} md={4} key={key}>
+              <Grid item xs={12} sm={6} md={4} key={challenge._id}>
                 <Card
                   sx={{
                     backgroundColor: "#1e1e2f",
@@ -110,15 +110,38 @@ export default function ChallengesList() {
                       variant="contained"
                       fullWidth
                       sx={{
-                        backgroundColor: "#ff8a00",
+                        backgroundColor:
+                          challenge.status === "in-progress" || challenge.status === "pending"
+                            ? "#ff8a00"
+                            : challenge.status === "result-generated"
+                            ? "#4caf50"
+                            : "#9e9e9e",
                         borderRadius: "30px",
                         fontSize: "16px",
                         fontWeight: "bold",
-                        "&:hover": { backgroundColor: "#e52e71" },
+                        "&:hover": {
+                          backgroundColor:
+                            challenge.status === "in-progress" || challenge.status === "pending"
+                              ? "#e52e71"
+                              : challenge.status === "result-generated"
+                              ? "#388e3c"
+                              : "#9e9e9e",
+                        },
                       }}
-                      onClick={() => navigate(`${tabIndex === 0 ? '/editor' : '/node-editor'}/${key}`)}
+                      onClick={() => {
+                        if (challenge.status === "in-progress" || challenge.status === "pending") {
+                          navigate(`/editor/${challenge.userChallengeId}`);
+                        } else if (challenge.status === "result-generated") {
+                          navigate(`/summary/${challenge.userChallengeId}`);
+                        }
+                      }}
+                      disabled={challenge.status === "completed"}
                     >
-                      Load Challenge
+                      {challenge.status === "in-progress" || challenge.status === "pending"
+                        ? "Load Challenge"
+                        : challenge.status === "result-generated"
+                        ? "Show Result"
+                        : "Completed"}
                     </Button>
                   </CardContent>
                 </Card>

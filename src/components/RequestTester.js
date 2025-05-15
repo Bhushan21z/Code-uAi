@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { backendUrl } from '../Constants/constants';
 
 function RequestTester() {
   const [url, setUrl] = useState('/your-endpoint');
@@ -9,7 +10,6 @@ function RequestTester() {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const serverUrl = 'https://vsnode.paclabs.com';
   const userId = localStorage.getItem('userId');
 
   const frameRequestBody = () => {
@@ -28,7 +28,7 @@ function RequestTester() {
     try {
       setLoading(true);
       const reqBody = frameRequestBody();
-      const res = await axios.post(`${serverUrl}/api/run-api/${userId}`, reqBody);
+      const res = await axios.post(`${backendUrl}/api/run-api/${userId}`, reqBody);
       
       setResponse({
         status: res.status,
